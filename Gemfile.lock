@@ -238,6 +238,7 @@ GEM
     mini_sql (1.4.0)
     mini_suffix (0.3.3)
       ffi (~> 1.9)
+    mini_tarball (0.2.0)
     minitest (5.16.3)
     mocha (1.16.0)
     msgpack (1.6.0)
@@ -586,6 +587,7 @@ DEPENDENCIES
   mini_scheduler
   mini_sql
   mini_suffix
+  mini_tarball
   minitest
   mocha
   multi_json
