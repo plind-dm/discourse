@@ -34,7 +34,10 @@ describe BackupRestoreNew::Operation do
 
     expect do
       described_class.abort!
-      threads.each(&:join)
+      threads.each do |thread|
+        thread.join(5)
+        thread.kill
+      end
     end.to raise_error(SystemExit)
 
     described_class.finish
