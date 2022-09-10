@@ -8,10 +8,11 @@ module BackupRestoreNew
     delegate :log, :log_event, :log_step, :log_warning, :log_error, to: :@logger, private: true
     attr_reader :success
 
-    def initialize(user_id, logger, backup_path_override: nil)
+    def initialize(user_id, logger, backup_path_override: nil, ticket: nil)
       @user = User.find_by(id: user_id) || Discourse.system_user
       @logger = logger
       @backup_path_override = backup_path_override
+      @ticket = ticket
     end
 
     def run
@@ -161,7 +162,7 @@ module BackupRestoreNew
 
       log_step("Notifying user") do
         status = @success ? :backup_succeeded : :backup_failed
-        logs = Discourse::Utils.logs_markdown(@logs, user: @user)
+        logs = Discourse::Utils.logs_markdown(@logger.logs, user: @user)
         post = SystemMessage.create_from_system_user(@user, status, logs: logs)
 
         if @user.id == Discourse::SYSTEM_USER_ID
@@ -193,9 +194,11 @@ module BackupRestoreNew
         end
 
         log_event "[SUCCESS]"
+        DiscourseEvent.trigger(:backup_complete, logs: @logger.logs, ticket: @ticket)
       else
         log_error "Backup failed!"
         log_event "[FAILED]"
+        DiscourseEvent.trigger(:backup_failed, logs: @logger.logs, ticket: @ticket)
       end
     end
 
