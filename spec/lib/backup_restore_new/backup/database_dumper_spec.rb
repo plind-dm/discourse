@@ -24,7 +24,7 @@ describe BackupRestoreNew::Backup::DatabaseDumper do
       stdout = StringIO.new("stdout 1\nstdout 2")
       stderr = StringIO.new("stderr 1\nstderr 2")
       Open3.expects(:popen3)
-        .with { |env, *command| command.include?("--schema=public") }
+        .with { |_env, *command| command.include?("--schema=public") }
         .yields(stdin, stdout, stderr, thread).once
 
       dumper = described_class.new

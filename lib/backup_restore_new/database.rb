@@ -3,7 +3,7 @@
 module BackupRestoreNew
   DatabaseConfiguration = Struct.new(:host, :port, :username, :password, :database)
 
-  class Database
+  module Database
     MAIN_SCHEMA = "public"
 
     def self.database_configuration

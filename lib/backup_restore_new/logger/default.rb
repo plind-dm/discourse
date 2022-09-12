@@ -3,9 +3,11 @@
 module BackupRestoreNew
   module Logger
     class Default < Base
-      def initialize(user_id, client_id)
+      # @param operation "backup" or "restore"
+      def initialize(user_id, client_id, operation)
         @user_id = user_id
         @client_id = client_id
+        @operation = operation
         @logs = []
       end
 
@@ -23,7 +25,7 @@ module BackupRestoreNew
       private
 
       def publish_log(message, timestamp)
-        data = { timestamp: timestamp, operation: "restore", message: message }
+        data = { timestamp: timestamp, operation: @operation, message: message }
         MessageBus.publish(BackupRestoreNew::LOGS_CHANNEL, data, user_ids: [@user_id], client_ids: [@client_id])
       end
 
