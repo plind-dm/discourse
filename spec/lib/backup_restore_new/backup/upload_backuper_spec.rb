@@ -8,6 +8,11 @@ describe BackupRestoreNew::Backup::UploadBackuper do
     SiteSetting.authorized_extensions = 'png|pdf'
   end
 
+  def initialize_fake_s3
+    setup_s3
+    @fake_s3 = FakeS3.create
+  end
+
   def create_uploads(fixtures)
     uploads = fixtures.map do |filename, file|
       upload = UploadCreator.new(file, filename).create_for(Discourse::SYSTEM_USER_ID)
@@ -32,7 +37,8 @@ describe BackupRestoreNew::Backup::UploadBackuper do
       path = prefixed_path.delete_prefix("/#{store.upload_path}/")
 
       file = if SiteSetting.enable_s3_uploads
-        @s3_objects[path][:body]
+        bucket = @fake_s3.bucket(SiteSetting.s3_upload_bucket)
+        bucket.find_object(path)[:body]
       else
         File.open(File.join(store.public_dir, prefixed_path), "rb").read
       end
@@ -41,7 +47,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
     end.transpose
   end
 
-  def uncompress(io)
+  def decompress(io)
     paths = []
     files = []
 
@@ -78,7 +84,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
     context "with uploads by users stored on S3" do
       before do
-        setup_s3
+        initialize_fake_s3
         Fabricate(:upload_s3)
       end
 
@@ -138,10 +144,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         missing_upload2 = Fabricate(upload_type)
 
         result = subject.compress_uploads(io)
-        uncompressed_paths, uncompressed_files = uncompress(io)
+        decompressed_paths, decompressed_files = decompress(io)
 
-        expect(uncompressed_paths).to eq(upload_paths)
-        expect(uncompressed_files).to eq(uploaded_files)
+        expect(decompressed_paths).to eq(upload_paths)
+        expect(decompressed_files).to eq(uploaded_files)
         expect(result[:total_count]).to eq(4)
         expect(result[:included_count]).to eq(2)
         expect(result[:failed_ids]).to contain_exactly(missing_upload1.id, missing_upload2.id)
@@ -156,8 +162,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
     context "with S3 uploads" do
       before do
-        setup_s3
-        stub_s3_store
+        initialize_fake_s3
       end
 
       let!(:upload_type) { :upload_s3 }
@@ -170,8 +175,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         local_upload_paths, local_uploaded_files = create_uploads(
           "smallest.png" => file_from_fixtures("smallest.png")
         )
-        setup_s3
-        stub_s3_store
+        initialize_fake_s3
         s3_upload_paths, s3_uploaded_files = create_uploads(
           "small.pdf" => file_from_fixtures("small.pdf", "pdf")
         )
@@ -180,10 +184,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         io = StringIO.new
         result = subject.compress_uploads(io)
-        uncompressed_paths, uncompressed_files = uncompress(io)
+        decompressed_paths, decompressed_files = decompress(io)
 
-        expect(uncompressed_paths).to eq(upload_paths)
-        expect(uncompressed_files).to eq(uploaded_files)
+        expect(decompressed_paths).to eq(upload_paths)
+        expect(decompressed_files).to eq(uploaded_files)
         expect(result[:total_count]).to eq(2)
         expect(result[:included_count]).to eq(2)
         expect(result[:failed_ids]).to be_blank
@@ -191,10 +195,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         SiteSetting.enable_s3_uploads = false
         io = StringIO.new
         result = subject.compress_uploads(io)
-        uncompressed_paths, uncompressed_files = uncompress(io)
+        decompressed_paths, decompressed_files = decompress(io)
 
-        expect(uncompressed_paths).to eq(upload_paths)
-        expect(uncompressed_files).to eq(uploaded_files)
+        expect(decompressed_paths).to eq(upload_paths)
+        expect(decompressed_files).to eq(uploaded_files)
         expect(result[:total_count]).to eq(2)
         expect(result[:included_count]).to eq(2)
         expect(result[:failed_ids]).to be_blank
@@ -217,18 +221,17 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       io = StringIO.new
       result = subject.compress_optimized_images(io)
-      uncompressed_paths, uncompressed_files = uncompress(io)
+      decompressed_paths, decompressed_files = decompress(io)
 
-      expect(uncompressed_paths).to eq(optimized_paths)
-      expect(uncompressed_files).to eq(optimized_files)
+      expect(decompressed_paths).to eq(optimized_paths)
+      expect(decompressed_files).to eq(optimized_files)
       expect(result[:total_count]).to eq(4)
       expect(result[:included_count]).to eq(2)
       expect(result[:failed_ids]).to contain_exactly(missing_image1.id, missing_image2.id)
     end
 
     it "doesn't include optimized images stored on S3" do
-      setup_s3
-      stub_s3_store
+      initialize_fake_s3
 
       create_optimized_images(
         "smallest.png" => file_from_fixtures("smallest.png"),
@@ -237,10 +240,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       io = StringIO.new
       result = subject.compress_optimized_images(io)
-      uncompressed_paths, uncompressed_files = uncompress(io)
+      decompressed_paths, decompressed_files = decompress(io)
 
-      expect(uncompressed_paths).to be_blank
-      expect(uncompressed_files).to be_blank
+      expect(decompressed_paths).to be_blank
+      expect(decompressed_files).to be_blank
       expect(result[:total_count]).to eq(2)
       expect(result[:included_count]).to eq(0)
       expect(result[:failed_ids]).to be_blank
