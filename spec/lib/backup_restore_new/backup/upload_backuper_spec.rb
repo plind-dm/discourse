@@ -157,7 +157,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
     context "with S3 uploads" do
       before do
         setup_s3
-        stub_s3_store(stub_s3_responses: true)
+        stub_s3_store
       end
 
       let!(:upload_type) { :upload_s3 }
@@ -171,7 +171,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
           "smallest.png" => file_from_fixtures("smallest.png")
         )
         setup_s3
-        stub_s3_store(stub_s3_responses: true)
+        stub_s3_store
         s3_upload_paths, s3_uploaded_files = create_uploads(
           "small.pdf" => file_from_fixtures("small.pdf", "pdf")
         )
@@ -228,7 +228,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
     it "doesn't include optimized images stored on S3" do
       setup_s3
-      stub_s3_store(stub_s3_responses: true)
+      stub_s3_store
 
       create_optimized_images(
         "smallest.png" => file_from_fixtures("smallest.png"),
