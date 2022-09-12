@@ -76,7 +76,7 @@ module BackupRestoreNew
 
     def add_db_dump(tar_writer)
       log_step("Creating database dump") do
-        tar_writer.add_file_from_stream(name: BackupRestore::DUMP_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreNew::DUMP_FILE, **tar_file_attributes) do |output_stream|
           dumper = Backup::DatabaseDumper.new
           dumper.dump_schema(output_stream)
         end
@@ -90,7 +90,7 @@ module BackupRestoreNew
       end
 
       log_step("Adding uploads", with_progress: true) do |progress_logger|
-        tar_writer.add_file_from_stream(name: BackupRestore::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreNew::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
           @backup_uploads_result = backuper.compress_uploads(output_stream)
         end
@@ -109,7 +109,7 @@ module BackupRestoreNew
       end
 
       log_step("Adding optimized images", with_progress: true) do |progress_logger|
-        tar_writer.add_file_from_stream(name: BackupRestore::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreNew::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
           @backup_optimized_images_result = backuper.compress_optimized_images(output_stream)
         end
@@ -123,7 +123,7 @@ module BackupRestoreNew
 
     def add_metadata(tar_writer)
       log_step("Adding metadata file") do
-        tar_writer.add_file_from_stream(name: BackupRestore::METADATA_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
           Backup::MetadataWriter.new(@backup_uploads_result, @backup_optimized_images_result).write(output_stream)
         end
       end
@@ -150,9 +150,14 @@ module BackupRestoreNew
       log_step("Cleaning up") do
         @store.delete_old if !Rails.env.development?
 
-        delete_uploaded_archive
-        remove_tar_leftovers
-        remove_tmp_directory
+        # delete backup if there was an error or the file was uploaded to a remote store
+        if File.exist?(@backup_path) && (!@success || @store.remote?)
+          File.delete(@backup_path)
+        end
+
+        # delete the temp directory
+        FileUtils.rm_rf(@tmp_directory) if Dir.exist?(@tmp_directory)
+
         @store.reset_cache
       end
     end

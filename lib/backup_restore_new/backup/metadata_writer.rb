@@ -12,7 +12,7 @@ module BackupRestoreNew
 
       def write(output_stream)
         data = {
-          version: BackupRestore.current_version,
+          version: BackupRestoreNew.current_version,
           git_version: Discourse.git_version,
           git_branch: Discourse.git_branch,
           plugins: plugin_list,
