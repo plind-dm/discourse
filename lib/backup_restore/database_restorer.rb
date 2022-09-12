@@ -51,6 +51,7 @@ module BackupRestore
       end
     end
 
+    # TODO Reuse from BackupRestoreNew::Database
     def self.core_migration_files
       Dir[Rails.root.join(Migration::SafeMigrate.post_migration_path, "**/*.rb")] +
         Dir[Rails.root.join("db/migrate/*.rb")]
