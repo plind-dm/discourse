@@ -264,7 +264,6 @@ if ENV["IMPORT"] == "1"
 end
 
 gem 'webpush', require: false
-gem 'colored2', require: false
 gem 'maxminddb'
 
 gem 'rails_failover', require: false
@@ -276,4 +275,8 @@ gem 'faraday-retry'
 # https://github.com/ruby/net-imap/issues/16#issuecomment-803086765
 gem 'net-http'
 
-gem 'mini_tarball'
+# used by backup and restore
+gem 'colored2', require: false
+gem 'mini_tarball', require: false
+gem 'ruby-progressbar', require: false
+gem 'tty-spinner', require: false

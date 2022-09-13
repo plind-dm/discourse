@@ -476,6 +476,9 @@ GEM
     thor (1.2.1)
     tilt (2.0.11)
     timeout (0.3.0)
+    tty-cursor (0.7.1)
+    tty-spinner (0.9.3)
+      tty-cursor (~> 0.7)
     tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     uglifier (4.2.0)
@@ -632,6 +635,7 @@ DEPENDENCIES
   rswag-specs
   rubocop-discourse
   ruby-prof
+  ruby-progressbar
   ruby-readability
   rubyzip
   sanitize
@@ -647,6 +651,7 @@ DEPENDENCIES
   stackprof
   test-prof
   thor
+  tty-spinner
   uglifier
   unf
   unicorn
