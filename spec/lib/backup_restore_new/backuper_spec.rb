@@ -55,7 +55,7 @@ describe BackupRestoreNew::Backuper do
     BackupRestoreNew::Backup::UploadBackuper.any_instance
       .expects(:compress_uploads)
       .with(output_stream)
-      .returns({ failed_ids: [] })
+      .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
       .once
 
     BackupRestoreNew::Backup::UploadBackuper.expects(:include_uploads?)
@@ -74,7 +74,7 @@ describe BackupRestoreNew::Backuper do
     BackupRestoreNew::Backup::UploadBackuper.any_instance
       .expects(:compress_optimized_images)
       .with(output_stream)
-      .returns({ failed_ids: [] })
+      .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
       .once
 
     BackupRestoreNew::Backup::UploadBackuper.expects(:include_optimized_images?)

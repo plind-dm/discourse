@@ -96,7 +96,7 @@ module BackupRestoreNew
         end
       end
 
-      if (error_count = @backup_uploads_result[:failed_ids].size) > 0
+      if (error_count = @backup_uploads_result.failed_ids.size) > 0
         @warnings = true
         log_warning "Failed to add #{error_count} uploads. See logfile for details."
       end
@@ -115,7 +115,7 @@ module BackupRestoreNew
         end
       end
 
-      if (error_count = @backup_optimized_images_result[:failed_ids].size) > 0
+      if (error_count = @backup_optimized_images_result.failed_ids.size) > 0
         @warnings = true
         log_warning "Failed to add #{error_count} optimized images. See logfile for details."
       end

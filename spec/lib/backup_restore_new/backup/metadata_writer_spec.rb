@@ -53,8 +53,20 @@ describe BackupRestoreNew::Backup::MetadataWriter do
     end
 
     context "with uploads and optimized images" do
-      let(:backup_uploads_result) { BackupRestoreNew::Backup::UploadStats.new(83_829, 83_827, [29329, 39202]) }
-      let(:backup_optimized_images_result) { BackupRestoreNew::Backup::UploadStats.new(251_487, 251_481, [23880, 39828, 48520, 59329, 92939, 110392]) }
+      let(:backup_uploads_result) do
+        BackupRestoreNew::Backup::UploadStats.new(
+          total_count: 83_829,
+          included_count: 83_827,
+          failed_ids: [29329, 39202]
+        )
+      end
+      let(:backup_optimized_images_result) do
+        BackupRestoreNew::Backup::UploadStats.new(
+          total_count: 251_487,
+          included_count: 251_481,
+          failed_ids: [23880, 39828, 48520, 59329, 92939, 110392]
+        )
+      end
 
       it "writes the correct metadata" do
         expect_metadata(

@@ -59,6 +59,7 @@ module BackupRestoreNew
                 tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
                 @result.included_count += 1
               else
+                # TODO Do we really need to store the failed IDs?
                 @result.failed_ids << upload.id
                 @progress_logger.log("Failed to locate file for upload with ID #{upload.id}")
               end
@@ -78,6 +79,7 @@ module BackupRestoreNew
             tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
             @result.included_count += 1
           else
+            # TODO Do we really need to store the failed IDs?
             @result.failed_ids << optimized_image.id
             @progress_logger.log("Failed to locate file for optimized image with ID #{optimized_image.id}")
           end
@@ -122,7 +124,7 @@ module BackupRestoreNew
       end
 
       def create_result(total)
-        BackupRestoreNew::Backup::UploadStats.new(total)
+        BackupRestoreNew::Backup::UploadStats.new(total_count: total)
       end
     end
   end
