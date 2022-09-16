@@ -6,8 +6,4 @@ module BackupRestoreNew
   OPTIMIZED_IMAGES_FILE = "optimized-images.tar.gz"
   METADATA_FILE = "meta.json"
   LOGS_CHANNEL = "/admin/backups/logs"
-
-  def self.current_version
-    ActiveRecord::Migrator.current_version
-  end
 end

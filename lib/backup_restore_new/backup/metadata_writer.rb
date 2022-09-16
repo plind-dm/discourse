@@ -12,10 +12,10 @@ module BackupRestoreNew
 
       def write(output_stream)
         data = {
-          version: BackupRestoreNew.current_version,
+          version: Discourse::VERSION::STRING,
+          db_version: Database.current_core_migration_version,
           git_version: Discourse.git_version,
           git_branch: Discourse.git_branch,
-          plugins: plugin_list,
           base_url: Discourse.base_url,
           cdn_url: Discourse.asset_host,
           s3_base_url: SiteSetting.Upload.enable_s3_uploads ? SiteSetting.Upload.s3_base_url : nil,
@@ -23,7 +23,8 @@ module BackupRestoreNew
           db_name: RailsMultisite::ConnectionManagement.current_db,
           multisite: Rails.configuration.multisite,
           uploads: @upload_stats,
-          optimized_images: @optimized_image_stats
+          optimized_images: @optimized_image_stats,
+          plugins: plugin_list
         }
 
         output_stream.write(JSON.pretty_generate(data))
@@ -33,19 +34,21 @@ module BackupRestoreNew
 
       def result_to_stats(result)
         {
-          total_count: result&.dig(:total_count) || 0,
-          included_count: result&.dig(:included_count) || 0,
-          missing_count: result&.dig(:failed_ids)&.size || 0,
+          total_count: result&.total_count || 0,
+          included_count: result&.included_count || 0,
+          missing_count: result&.failed_ids&.size || 0,
         }
       end
 
       def plugin_list
-        Discourse.visible_plugins.map do |plugin|
-          {
-            name: plugin.name,
-            enabled: plugin.enabled?
-          }
+        plugins = { enabled: [], disabled: [] }
+
+        Discourse.visible_plugins.each do |plugin|
+          key = plugin.enabled? ? :enabled : :disabled
+          plugins[key] << plugin.name
         end
+
+        plugins
       end
     end
   end
