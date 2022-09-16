@@ -44,8 +44,12 @@ describe BackupRestoreNew::Database do
 
     it "doesn't return version numbers from plugins" do
       ActiveRecord::SchemaMigration.where("version > '20180820073549'").delete_all
-      # make sure that the migration from the poll plugin exists
-      expect(ActiveRecord::SchemaMigration.where(version: "20180820073549").exists?).to eq(true)
+
+      # Make sure that the migration from the poll plugin exists.
+      # It might be missing if the DB was migrated without plugin migrations.
+      if !ActiveRecord::SchemaMigration.where(version: "20180820073549").exists?
+        ActiveRecord::SchemaMigration.create!(version: "20180820073549")
+      end
 
       expect(described_class.current_core_migration_version).to eq(20180813074843)
     end
