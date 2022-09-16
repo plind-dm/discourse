@@ -22,7 +22,7 @@ module BackupRestoreNew
 
       def compress_uploads(output_stream)
         @result = create_result(Upload.by_users.count)
-        @progress_logger.start(@result[:total_count])
+        @progress_logger.start(@result.total_count)
 
         with_gzip(output_stream) do |tar_writer|
           add_original_files(tar_writer)
@@ -33,7 +33,7 @@ module BackupRestoreNew
 
       def compress_optimized_images(output_stream)
         @result = create_result(OptimizedImage.by_users.count)
-        @progress_logger.start(@result[:total_count])
+        @progress_logger.start(@result.total_count)
 
         with_gzip(output_stream) do |tar_writer|
           add_optimized_files(tar_writer)
@@ -57,9 +57,9 @@ module BackupRestoreNew
             if absolute_path.present?
               if File.exist?(absolute_path)
                 tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
-                @result[:included_count] += 1
+                @result.included_count += 1
               else
-                @result[:failed_ids] << upload.id
+                @result.failed_ids << upload.id
                 @progress_logger.log("Failed to locate file for upload with ID #{upload.id}")
               end
             end
@@ -76,9 +76,9 @@ module BackupRestoreNew
 
           if File.exist?(absolute_path)
             tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
-            @result[:included_count] += 1
+            @result.included_count += 1
           else
-            @result[:failed_ids] << optimized_image.id
+            @result.failed_ids << optimized_image.id
             @progress_logger.log("Failed to locate file for optimized image with ID #{optimized_image.id}")
           end
 
@@ -99,7 +99,7 @@ module BackupRestoreNew
             s3_store.download_file(upload, absolute_path)
           rescue => ex
             absolute_path = nil
-            @result[:failed_ids] << upload.id
+            @result.failed_ids << upload.id
             @progress_logger.log("Failed to download file from S3 for upload with ID #{upload.id}", ex)
           end
         end
@@ -122,7 +122,7 @@ module BackupRestoreNew
       end
 
       def create_result(total)
-        { total_count: total, included_count: 0, failed_ids: [] }
+        BackupRestoreNew::Backup::UploadStats.new(total)
       end
     end
   end

@@ -148,9 +148,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result[:total_count]).to eq(4)
-        expect(result[:included_count]).to eq(2)
-        expect(result[:failed_ids]).to contain_exactly(missing_upload1.id, missing_upload2.id)
+        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result.total_count).to eq(4)
+        expect(result.included_count).to eq(2)
+        expect(result.failed_ids).to contain_exactly(missing_upload1.id, missing_upload2.id)
       end
     end
 
@@ -188,9 +189,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result[:total_count]).to eq(2)
-        expect(result[:included_count]).to eq(2)
-        expect(result[:failed_ids]).to be_blank
+        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result.total_count).to eq(2)
+        expect(result.included_count).to eq(2)
+        expect(result.failed_ids).to be_blank
 
         SiteSetting.enable_s3_uploads = false
         io = StringIO.new
@@ -199,9 +201,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result[:total_count]).to eq(2)
-        expect(result[:included_count]).to eq(2)
-        expect(result[:failed_ids]).to be_blank
+        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result.total_count).to eq(2)
+        expect(result.included_count).to eq(2)
+        expect(result.failed_ids).to be_blank
       end
     end
   end
@@ -225,9 +228,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       expect(decompressed_paths).to eq(optimized_paths)
       expect(decompressed_files).to eq(optimized_files)
-      expect(result[:total_count]).to eq(4)
-      expect(result[:included_count]).to eq(2)
-      expect(result[:failed_ids]).to contain_exactly(missing_image1.id, missing_image2.id)
+      expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+      expect(result.total_count).to eq(4)
+      expect(result.included_count).to eq(2)
+      expect(result.failed_ids).to contain_exactly(missing_image1.id, missing_image2.id)
     end
 
     it "doesn't include optimized images stored on S3" do
@@ -244,9 +248,10 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       expect(decompressed_paths).to be_blank
       expect(decompressed_files).to be_blank
-      expect(result[:total_count]).to eq(2)
-      expect(result[:included_count]).to eq(0)
-      expect(result[:failed_ids]).to be_blank
+      expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+      expect(result.total_count).to eq(2)
+      expect(result.included_count).to eq(0)
+      expect(result.failed_ids).to be_blank
     end
   end
 end
