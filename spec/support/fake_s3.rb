@@ -153,7 +153,6 @@ class FakeS3Bucket
   def put_object(obj)
     if obj[:body]&.is_a?(File)
       obj[:body] = File.binread(obj[:body].path)
-      # obj[:body] = obj[:body].read
     end
 
     @objects[obj[:key]] = obj
