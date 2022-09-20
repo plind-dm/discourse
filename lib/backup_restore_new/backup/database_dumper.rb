@@ -13,12 +13,12 @@ module BackupRestoreNew
         @log_lines = []
       end
 
-      def dump_schema(dump_output_stream)
+      def dump_schema_into(output_stream)
         Open3.popen3(*pg_dump_command) do |_, stdout, stderr, thread|
           thread.name = "pg_dump"
           [
             thread,
-            output_thread(stdout, dump_output_stream),
+            output_thread(stdout, output_stream),
             logger_thread(stderr)
           ].each(&:join)
         end

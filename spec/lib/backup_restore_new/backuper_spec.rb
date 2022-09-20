@@ -39,7 +39,7 @@ describe BackupRestoreNew::Backuper do
   def expect_db_dump_added_to_tar(tar_writer)
     output_stream = mock("db_dump_output_stream")
 
-    BackupRestoreNew::Backup::DatabaseDumper.any_instance.expects(:dump_schema)
+    BackupRestoreNew::Backup::DatabaseDumper.any_instance.expects(:dump_schema_into)
       .with(output_stream)
       .once
 
@@ -53,7 +53,7 @@ describe BackupRestoreNew::Backuper do
     output_stream = mock("uploads_stream")
 
     BackupRestoreNew::Backup::UploadBackuper.any_instance
-      .expects(:compress_uploads)
+      .expects(:compress_uploads_into)
       .with(output_stream)
       .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
       .once
@@ -72,7 +72,7 @@ describe BackupRestoreNew::Backuper do
     output_stream = mock("optimized_images_stream")
 
     BackupRestoreNew::Backup::UploadBackuper.any_instance
-      .expects(:compress_optimized_images)
+      .expects(:compress_optimized_images_into)
       .with(output_stream)
       .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
       .once
@@ -90,8 +90,22 @@ describe BackupRestoreNew::Backuper do
   def expect_metadata_added_to_tar(tar_writer)
     output_stream = mock("metadata_stream")
 
-    BackupRestoreNew::Backup::MetadataWriter.any_instance.expects(:write)
+    BackupRestoreNew::Backup::MetadataWriter.any_instance.expects(:estimated_file_size)
+      .returns(417)
+      .once
+
+    BackupRestoreNew::Backup::MetadataWriter.any_instance.expects(:write_into)
       .with(output_stream)
+      .once
+
+    tar_writer.expects(:add_file_placeholder)
+      .with(has_entries(name: "meta.json", file_size: 417))
+      .returns(1)
+      .once
+
+    tar_writer.expects(:with_placeholder)
+      .with(1)
+      .yields(tar_writer)
       .once
 
     tar_writer.expects(:add_file_from_stream)

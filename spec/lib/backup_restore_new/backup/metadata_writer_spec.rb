@@ -20,7 +20,7 @@ describe BackupRestoreNew::Backup::MetadataWriter do
 
   describe "#write" do
     def expect_metadata(expected_data_overrides = {})
-      subject.write(io)
+      subject.write_into(io)
       expect(io.string).to be_present
 
       expected_data = {

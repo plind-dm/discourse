@@ -20,7 +20,7 @@ module BackupRestoreNew
         @progress_logger = progress_logger
       end
 
-      def compress_uploads(output_stream)
+      def compress_uploads_into(output_stream)
         @result = create_result(Upload.by_users.count)
         @progress_logger.start(@result.total_count)
 
@@ -31,7 +31,7 @@ module BackupRestoreNew
         @result
       end
 
-      def compress_optimized_images(output_stream)
+      def compress_optimized_images_into(output_stream)
         @result = create_result(OptimizedImage.by_users.count)
         @progress_logger.start(@result.total_count)
 

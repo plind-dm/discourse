@@ -67,18 +67,26 @@ module BackupRestoreNew
 
     def create_backup
       MiniTarball::Writer.create(@backup_path) do |writer|
+        metadata_placeholder = add_metadata_placeholder(writer)
         add_db_dump(writer)
         add_uploads(writer)
         add_optimized_images(writer)
-        add_metadata(writer)
+        add_metadata(writer, metadata_placeholder)
       end
+    end
+
+    def add_metadata_placeholder(tar_writer)
+      tar_writer.add_file_placeholder(
+        name: BackupRestoreNew::METADATA_FILE,
+        file_size: Backup::MetadataWriter.new.estimated_file_size
+      )
     end
 
     def add_db_dump(tar_writer)
       log_step("Creating database dump") do
         tar_writer.add_file_from_stream(name: BackupRestoreNew::DUMP_FILE, **tar_file_attributes) do |output_stream|
           dumper = Backup::DatabaseDumper.new
-          dumper.dump_schema(output_stream)
+          dumper.dump_schema_into(output_stream)
         end
       end
     end
@@ -92,7 +100,7 @@ module BackupRestoreNew
       log_step("Adding uploads", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_uploads_result = backuper.compress_uploads(output_stream)
+          @backup_uploads_result = backuper.compress_uploads_into(output_stream)
         end
       end
 
@@ -111,7 +119,7 @@ module BackupRestoreNew
       log_step("Adding optimized images", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_optimized_images_result = backuper.compress_optimized_images(output_stream)
+          @backup_optimized_images_result = backuper.compress_optimized_images_into(output_stream)
         end
       end
 
@@ -121,10 +129,12 @@ module BackupRestoreNew
       end
     end
 
-    def add_metadata(tar_writer)
+    def add_metadata(tar_writer, placeholder)
       log_step("Adding metadata file") do
-        tar_writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
-          Backup::MetadataWriter.new(@backup_uploads_result, @backup_optimized_images_result).write(output_stream)
+        tar_writer.with_placeholder(placeholder) do |writer|
+          writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
+            Backup::MetadataWriter.new(@backup_uploads_result, @backup_optimized_images_result).write_into(output_stream)
+          end
         end
       end
     end

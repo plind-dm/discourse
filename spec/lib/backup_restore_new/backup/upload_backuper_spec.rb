@@ -143,7 +143,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         missing_upload2 = Fabricate(upload_type)
 
-        result = subject.compress_uploads(io)
+        result = subject.compress_uploads_into(io)
         decompressed_paths, decompressed_files = decompress(io)
 
         expect(decompressed_paths).to eq(upload_paths)
@@ -184,7 +184,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         uploaded_files = local_uploaded_files + s3_uploaded_files
 
         io = StringIO.new
-        result = subject.compress_uploads(io)
+        result = subject.compress_uploads_into(io)
         decompressed_paths, decompressed_files = decompress(io)
 
         expect(decompressed_paths).to eq(upload_paths)
@@ -196,7 +196,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         SiteSetting.enable_s3_uploads = false
         io = StringIO.new
-        result = subject.compress_uploads(io)
+        result = subject.compress_uploads_into(io)
         decompressed_paths, decompressed_files = decompress(io)
 
         expect(decompressed_paths).to eq(upload_paths)
@@ -223,7 +223,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
       missing_image2 = Fabricate(:optimized_image)
 
       io = StringIO.new
-      result = subject.compress_optimized_images(io)
+      result = subject.compress_optimized_images_into(io)
       decompressed_paths, decompressed_files = decompress(io)
 
       expect(decompressed_paths).to eq(optimized_paths)
@@ -243,7 +243,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
       )
 
       io = StringIO.new
-      result = subject.compress_optimized_images(io)
+      result = subject.compress_optimized_images_into(io)
       decompressed_paths, decompressed_files = decompress(io)
 
       expect(decompressed_paths).to be_blank

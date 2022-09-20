@@ -8,7 +8,7 @@ describe BackupRestoreNew::Backup::DatabaseDumper do
   describe "#dump_public_schema" do
     it "raises an exception when the last output of pg_dump is an error" do
       dumper = described_class.new(schema: "non_existent_schema")
-      expect { dumper.dump_schema(io) }.to raise_error(BackupRestoreNew::Backup::DatabaseBackupError)
+      expect { dumper.dump_schema_into(io) }.to raise_error(BackupRestoreNew::Backup::DatabaseBackupError)
     end
 
     it "dumps the public schema by default" do
@@ -28,7 +28,7 @@ describe BackupRestoreNew::Backup::DatabaseDumper do
         .yields(stdin, stdout, stderr, thread).once
 
       dumper = described_class.new
-      dumper.dump_schema(io)
+      dumper.dump_schema_into(io)
 
       expect(io.string).to eq(stdout.string)
       expect(dumper.log_lines).to eq(stderr.string.split("\n"))
@@ -60,7 +60,7 @@ describe BackupRestoreNew::Backup::DatabaseDumper do
 
       it "successfully dumps a database schema into a gzipped stream" do
         dumper = described_class.new(schema: "backup_test")
-        dumper.dump_schema(io)
+        dumper.dump_schema_into(io)
 
         db_dump = Zlib::gunzip(io.string)
 
