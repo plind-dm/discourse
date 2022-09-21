@@ -75,6 +75,12 @@ module BackupRestoreNew
       end
     end
 
+    # Adds an empty file to the backup archive which acts as a placeholder for the `meta.json` file.
+    # This file needs to be the first file in the backup archive in order to allow reading the backup's
+    # metadata without downloading the whole file. The file size is estimated because some of the data
+    # is still unknown at this time.
+    # @param [MiniTarball::Writer] tar_writer
+    # @return [Integer] index of the placeholder
     def add_metadata_placeholder(tar_writer)
       tar_writer.add_file_placeholder(
         name: BackupRestoreNew::METADATA_FILE,
@@ -82,6 +88,8 @@ module BackupRestoreNew
       )
     end
 
+    # Streams the database dump directly into the backup archive.
+    # @param [MiniTarball::Writer] tar_writer
     def add_db_dump(tar_writer)
       log_step("Creating database dump") do
         tar_writer.add_file_from_stream(name: BackupRestoreNew::DUMP_FILE, **tar_file_attributes) do |output_stream|
@@ -91,6 +99,8 @@ module BackupRestoreNew
       end
     end
 
+    # Streams uploaded files directly into the backup archive.
+    # @param [MiniTarball::Writer] tar_writer
     def add_uploads(tar_writer)
       if !Backup::UploadBackuper.include_uploads?
         log "Skipping uploads"
@@ -110,6 +120,8 @@ module BackupRestoreNew
       end
     end
 
+    # Streams optimized images directly into the backup archive.
+    # @param [MiniTarball::Writer] tar_writer
     def add_optimized_images(tar_writer)
       if !Backup::UploadBackuper.include_optimized_images?
         log "Skipping optimized images"
@@ -129,6 +141,9 @@ module BackupRestoreNew
       end
     end
 
+    # Overwrites the `meta.json` file at the beginning of the backup archive.
+    # @param [MiniTarball::Writer] tar_writer
+    # @param [Integer] placeholder index of the placeholder
     def add_metadata(tar_writer, placeholder)
       log_step("Adding metadata file") do
         tar_writer.with_placeholder(placeholder) do |writer|
