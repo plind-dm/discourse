@@ -6,15 +6,25 @@ describe BackupRestoreNew::Backuper do
   fab!(:admin) { Fabricate(:admin) }
   let!(:logger) do
     Class.new(BackupRestoreNew::Logger::Base) do
-      def log(message, level: nil); end
+      def log(message, level: nil)
+        @logs << message
+      end
+
+      def log_event(event)
+        @logs << event
+      end
     end.new
   end
 
   subject { described_class.new(admin.id, logger) }
 
-  def execute_stubbed_backup(site_name: "discourse")
-    date_string = "2021-03-24T20:27:31Z"
-    freeze_time(Time.parse(date_string))
+  def execute_failed_backup
+    BackupRestoreNew::Operation.stubs(:start).raises(BackupRestoreNew::OperationRunningError)
+    subject.run
+  end
+
+  def execute_successful_backup(site_name: "discourse")
+    freeze_time(Time.parse("2021-03-24T20:27:31Z"))
 
     tar_writer = mock("tar_writer")
     expect_tar_creation(tar_writer, site_name)
@@ -115,6 +125,22 @@ describe BackupRestoreNew::Backuper do
   end
 
   it "successfully creates a backup" do
-    execute_stubbed_backup
+    execute_successful_backup
+  end
+
+  context "with logging for UI" do
+    it "logs events for successful backup" do
+      execute_successful_backup
+
+      expect(logger.logs.first).to eq("[STARTED]")
+      expect(logger.logs.last).to eq("[SUCCESS]")
+    end
+
+    it "logs events for failed backup" do
+      execute_failed_backup
+
+      expect(logger.logs.first).to eq("[STARTED]")
+      expect(logger.logs.last).to eq("[FAILED]")
+    end
   end
 end

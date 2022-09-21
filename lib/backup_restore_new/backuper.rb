@@ -23,13 +23,13 @@ module BackupRestoreNew
       create_backup
       upload_backup
       finalize_backup
-    rescue SystemExit, SignalException
-      log_warning "Backup operation was canceled!"
-    rescue => ex
-      log_error "Backup failed!", ex
-    else
+
       @success = true
       @backup_path
+    rescue SystemExit, SignalException
+      log_warning "Backup operation was canceled!"
+    rescue BackupRestoreNew::OperationRunningError
+      log_error "Operation is already running"
     ensure
       clean_up
       notify_user
@@ -173,17 +173,19 @@ module BackupRestoreNew
 
     def clean_up
       log_step("Cleaning up") do
-        @store.delete_old if !Rails.env.development?
-
         # delete backup if there was an error or the file was uploaded to a remote store
-        if File.exist?(@backup_path) && (!@success || @store.remote?)
+        if @backup_path && File.exist?(@backup_path) && (!@success || @store.remote?)
           File.delete(@backup_path)
         end
 
         # delete the temp directory
-        FileUtils.rm_rf(@tmp_directory) if Dir.exist?(@tmp_directory)
+        FileUtils.rm_rf(@tmp_directory) if @tmp_directory && Dir.exist?(@tmp_directory)
 
-        @store.reset_cache
+        if Rails.env.development?
+          @store&.reset_cache
+        else
+          @store&.delete_old
+        end
       end
     end
 
