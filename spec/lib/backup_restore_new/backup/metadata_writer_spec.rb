@@ -47,10 +47,7 @@ describe BackupRestoreNew::Backup::MetadataWriter do
         multisite: false,
         uploads: { total_count: 0, included_count: 0, missing_count: 0 },
         optimized_images: { total_count: 0, included_count: 0, missing_count: 0 },
-        plugins: {
-          enabled: [],
-          disabled: []
-        }
+        plugins: []
       }.deep_merge(expected_data_overrides)
 
       data = JSON.parse(io.string, symbolize_names: true)
@@ -110,7 +107,7 @@ describe BackupRestoreNew::Backup::MetadataWriter do
     end
 
     context "with plugins" do
-      def create_plugin(name, enabled:)
+      def create_plugin(name, enabled:, git_version: nil, db_version: 0)
         metadata = Plugin::Metadata.new
         metadata.name = name
 
@@ -120,14 +117,22 @@ describe BackupRestoreNew::Backup::MetadataWriter do
 
         instance = Plugin::Instance.new(metadata, "/tmp/#{normalized_name}/plugin.rb")
         instance.enabled_site_setting(enabled_setting_name)
+        instance.stubs(:git_version).returns(git_version)
+
+        BackupRestoreNew::Database.stubs(:current_plugin_migration_version)
+          .with(instance)
+          .returns(db_version)
+
         instance
       end
 
       before do
         visible_plugins = [
           create_plugin("discourse-solved", enabled: true),
-          create_plugin("discourse-chat", enabled: true),
+          create_plugin("discourse-chat", enabled: true, git_version: "28819613b9aa46b3f80b22fc381c1a3d92de9785", db_version: 20220901034107),
+          create_plugin("discourse-reactions", enabled: true, git_version: "301918a6505a89ae45481636987d9f5988d98805"),
           create_plugin("discourse-math", enabled: false),
+          create_plugin("discourse-encrypt", enabled: false, git_version: "82ea2c31d59fd4f8c7275f796a2a10548857a7fa", db_version: 20201027233335)
         ]
         hidden_plugins = [
           create_plugin("poll", enabled: true),
@@ -140,10 +145,38 @@ describe BackupRestoreNew::Backup::MetadataWriter do
 
       it "includes only visible plugins in metadata" do
         expect_metadata(
-          plugins: {
-            enabled: ["discourse-solved", "discourse-chat"],
-            disabled: ["discourse-math"]
-          }
+          plugins: [
+            {
+              name: "discourse-chat",
+              enabled: true,
+              db_version: 20220901034107,
+              git_version: "28819613b9aa46b3f80b22fc381c1a3d92de9785"
+            },
+            {
+              name: "discourse-encrypt",
+              enabled: false,
+              db_version: 20201027233335,
+              git_version: "82ea2c31d59fd4f8c7275f796a2a10548857a7fa"
+            },
+            {
+              name: "discourse-math",
+              enabled: false,
+              db_version: 0,
+              git_version: nil
+            },
+            {
+              name: "discourse-reactions",
+              enabled: true,
+              db_version: 0,
+              git_version: "301918a6505a89ae45481636987d9f5988d98805"
+            },
+            {
+              name: "discourse-solved",
+              enabled: true,
+              db_version: 0,
+              git_version: nil
+            }
+          ]
         )
       end
     end

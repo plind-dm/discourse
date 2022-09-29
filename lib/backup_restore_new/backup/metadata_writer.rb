@@ -5,6 +5,8 @@ require 'json'
 module BackupRestoreNew
   module Backup
     class MetadataWriter
+      attr_accessor :upload_stats, :optimized_image_stats
+
       def initialize(uploads_result = nil, optimized_images_result = nil)
         @upload_stats = result_to_stats(uploads_result)
         @optimized_image_stats = result_to_stats(optimized_images_result)
@@ -50,14 +52,18 @@ module BackupRestoreNew
       end
 
       def plugin_list
-        plugins = { enabled: [], disabled: [] }
+        plugins = []
 
         Discourse.visible_plugins.each do |plugin|
-          key = plugin.enabled? ? :enabled : :disabled
-          plugins[key] << plugin.name
+          plugins << {
+            name: plugin.name,
+            enabled: plugin.enabled?,
+            db_version: Database.current_plugin_migration_version(plugin),
+            git_version: plugin.git_version
+          }
         end
 
-        plugins
+        plugins.sort_by { |p| p[:name] }
       end
     end
   end

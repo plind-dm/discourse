@@ -54,4 +54,29 @@ describe BackupRestoreNew::Database do
       expect(described_class.current_core_migration_version).to eq(20180813074843)
     end
   end
+
+  describe ".current_plugin_migration_version" do
+    let(:plugin) do
+      metadata = Plugin::Metadata.new
+      metadata.name = "poll"
+      Plugin::Instance.new(metadata, absolute_path("plugins/poll/plugin.rb"))
+    end
+
+    it "returns 0 if there are no schema migrations" do
+      ActiveRecord::SchemaMigration.stubs(:table_exists?).returns(false)
+      expect(described_class.current_plugin_migration_version(plugin)).to eq(0)
+    end
+
+    it "returns the max schema migration version" do
+      ActiveRecord::SchemaMigration.where("version > '20220101010000'").delete_all
+
+      # Make sure that the migration from the poll plugin exists.
+      # It might be missing if the DB was migrated without plugin migrations.
+      if !ActiveRecord::SchemaMigration.where(version: "20200804144550").exists?
+        ActiveRecord::SchemaMigration.create!(version: "20200804144550")
+      end
+
+      expect(described_class.current_plugin_migration_version(plugin)).to eq(20200804144550)
+    end
+  end
 end
