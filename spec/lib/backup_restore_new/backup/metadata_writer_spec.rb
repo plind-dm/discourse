@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rubocop:disable Discourse/OnlyTopLevelMultisiteSpecs
 
 require 'rails_helper'
 
@@ -73,6 +74,14 @@ describe BackupRestoreNew::Backup::MetadataWriter do
           uploads: { total_count: 83_829, included_count: 83_827, missing_count: 2 },
           optimized_images: { total_count: 251_487, included_count: 251_481, missing_count: 6 }
         )
+      end
+    end
+
+    context "with multisite", type: :multisite do
+      it "writes the correct metadata" do
+        test_multisite_connection("second") do
+          expect_metadata(db_name: "second", multisite: true)
+        end
       end
     end
   end

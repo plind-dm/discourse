@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rubocop:disable Discourse/OnlyTopLevelMultisiteSpecs
 
 require 'rails_helper'
 
@@ -51,5 +52,24 @@ describe BackupRestoreNew::Operation do
     described_class.start
     expect(described_class.should_abort?).to eq(false)
     described_class.finish
+  end
+
+  context "with multisite", type: :multisite do
+    it "uses the correct Redis namespace" do
+      test_multisite_connection("second") do
+        threads = described_class.start
+
+        expect do
+          described_class.abort!
+          threads.each do |thread|
+            thread.join(5)
+            thread.kill
+          end
+        end.to raise_error(SystemExit)
+
+        described_class.finish
+        threads.each { |t| expect(t.status).to be_falsey }
+      end
+    end
   end
 end
