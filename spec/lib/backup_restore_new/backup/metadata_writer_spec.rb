@@ -19,6 +19,16 @@ describe BackupRestoreNew::Backup::MetadataWriter do
     Discourse.stubs(:hidden_plugins).returns([])
   end
 
+  describe "#estimated_file_size" do
+    it "adds 1 kilobyte to the actual filesize" do
+      subject.write_into(io)
+      current_size = io.string.bytesize
+
+      expect(current_size).to be > 256
+      expect(subject.estimated_file_size).to eq(current_size + 1024)
+    end
+  end
+
   describe "#write" do
     def expect_metadata(expected_data_overrides = {})
       subject.write_into(io)
@@ -82,6 +92,59 @@ describe BackupRestoreNew::Backup::MetadataWriter do
         test_multisite_connection("second") do
           expect_metadata(db_name: "second", multisite: true)
         end
+      end
+    end
+
+    context "with S3 enabled" do
+      before do
+        setup_s3
+        SiteSetting.s3_cdn_url = "https://s3.cdn.com"
+      end
+
+      it "writes the correct metadata" do
+        expect_metadata(
+          s3_base_url: "//s3-upload-bucket.s3.dualstack.us-west-1.amazonaws.com",
+          s3_cdn_url: "https://s3.cdn.com"
+        )
+      end
+    end
+
+    context "with plugins" do
+      def create_plugin(name, enabled:)
+        metadata = Plugin::Metadata.new
+        metadata.name = name
+
+        normalized_name = name.underscore
+        enabled_setting_name = "plugin_#{normalized_name}_enabled"
+        SiteSetting.setting(enabled_setting_name.to_sym, enabled)
+
+        instance = Plugin::Instance.new(metadata, "/tmp/#{normalized_name}/plugin.rb")
+        instance.enabled_site_setting(enabled_setting_name)
+        instance
+      end
+
+      before do
+        visible_plugins = [
+          create_plugin("discourse-solved", enabled: true),
+          create_plugin("discourse-chat", enabled: true),
+          create_plugin("discourse-math", enabled: false),
+        ]
+        hidden_plugins = [
+          create_plugin("poll", enabled: true),
+          create_plugin("styleguide", enabled: false)
+        ]
+        all_plugins = visible_plugins + hidden_plugins
+        Discourse.stubs(:plugins).returns(all_plugins)
+        Discourse.stubs(:hidden_plugins).returns(hidden_plugins)
+      end
+
+      it "includes only visible plugins in metadata" do
+        expect_metadata(
+          plugins: {
+            enabled: ["discourse-solved", "discourse-chat"],
+            disabled: ["discourse-math"]
+          }
+        )
       end
     end
   end
