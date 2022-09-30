@@ -24,7 +24,7 @@ module BackupRestoreNew
       private
 
       def json
-        data = {
+        @cached_data ||= {
           version: Discourse::VERSION::STRING,
           db_version: Database.current_core_migration_version,
           git_version: Discourse.git_version,
@@ -35,10 +35,15 @@ module BackupRestoreNew
           s3_cdn_url: SiteSetting.Upload.enable_s3_uploads ? SiteSetting.Upload.s3_cdn_url : nil,
           db_name: RailsMultisite::ConnectionManagement.current_db,
           multisite: Rails.configuration.multisite,
-          uploads: @upload_stats,
-          optimized_images: @optimized_image_stats,
           plugins: plugin_list
         }
+
+        data = @cached_data.merge(
+          {
+            uploads: @upload_stats,
+            optimized_images: @optimized_image_stats
+          }
+        )
 
         JSON.pretty_generate(data)
       end
