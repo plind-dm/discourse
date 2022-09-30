@@ -11,6 +11,8 @@ module BackupRestoreNew
 
       def initialize
         @logs = []
+        @warning_count = 0
+        @error_count = 0
       end
 
       def log_event(event); end
@@ -31,10 +33,20 @@ module BackupRestoreNew
 
       def log_warning(message, ex = nil)
         log_with_exception(message, ex, Logger::WARNING)
+        @warning_count += 1
       end
 
       def log_error(message, ex = nil)
         log_with_exception(message, ex, Logger::ERROR)
+        @error_count += 1
+      end
+
+      def warnings?
+        @warning_count > 0
+      end
+
+      def errors?
+        @error_count > 0
       end
 
       private

@@ -69,7 +69,7 @@ module BackupRestoreNew
           Thread.current.name = "pg_dump_logger"
           Thread.current.report_on_exception = false
 
-          while line = stderr.readline
+          while (line = stderr.readline)
             line.chomp!
             @log_lines << line
           end

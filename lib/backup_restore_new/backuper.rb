@@ -8,11 +8,13 @@ module BackupRestoreNew
     delegate :log, :log_event, :log_step, :log_warning, :log_error, to: :@logger, private: true
     attr_reader :success
 
-    def initialize(user_id, logger, backup_path_override: nil, ticket: nil)
+    # @param [Hash] opts
+    # @option opts [String] :backup_path_override
+    # @option opts [String] :ticket
+    def initialize(user_id, logger, opts = {})
       @user = User.find_by(id: user_id) || Discourse.system_user
       @logger = logger
-      @backup_path_override = backup_path_override
-      @ticket = ticket
+      @opts = opts
     end
 
     def run
@@ -41,7 +43,6 @@ module BackupRestoreNew
     def initialize_backup
       log_step("Initializing backup") do
         @success = false
-        @warnings = false
         @store = BackupRestore::BackupStore.create
 
         BackupRestoreNew::Operation.start
@@ -66,12 +67,14 @@ module BackupRestoreNew
     end
 
     def create_backup
-      MiniTarball::Writer.create(@backup_path) do |writer|
-        metadata_placeholder = add_metadata_placeholder(writer)
-        add_db_dump(writer)
-        add_uploads(writer)
-        add_optimized_images(writer)
-        add_metadata(writer, metadata_placeholder)
+      metadata_writer = BackupRestoreNew::Backup::MetadataWriter.new
+
+      MiniTarball::Writer.create(@backup_path) do |tar_writer|
+        metadata_placeholder = add_metadata_placeholder(tar_writer, metadata_writer)
+        add_db_dump(tar_writer)
+        metadata_writer.upload_stats = add_uploads(tar_writer)
+        metadata_writer.optimized_image_stats = add_optimized_images(tar_writer)
+        add_metadata(tar_writer, metadata_writer, metadata_placeholder)
       end
     end
 
@@ -80,11 +83,12 @@ module BackupRestoreNew
     # metadata without downloading the whole file. The file size is estimated because some of the data
     # is still unknown at this time.
     # @param [MiniTarball::Writer] tar_writer
+    # @param [BackupRestoreNew::Backup::MetadataWriter] metadata_writer
     # @return [Integer] index of the placeholder
-    def add_metadata_placeholder(tar_writer)
+    def add_metadata_placeholder(tar_writer, metadata_writer)
       tar_writer.add_file_placeholder(
         name: BackupRestoreNew::METADATA_FILE,
-        file_size: Backup::MetadataWriter.new.estimated_file_size
+        file_size: metadata_writer.estimated_file_size
       )
     end
 
@@ -107,17 +111,20 @@ module BackupRestoreNew
         return
       end
 
+      stats = nil
+
       log_step("Adding uploads", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_uploads_stats = backuper.compress_uploads_into(output_stream)
+          stats = backuper.compress_uploads_into(output_stream)
         end
       end
 
-      if (error_count = @backup_uploads_stats.missing_count) > 0
-        @warnings = true
-        log_warning "Failed to add #{error_count} uploads. See logfile for details."
+      if stats && stats.missing_count > 0
+        log_warning "Failed to add #{stats.missing_count} uploads. See logfile for details."
       end
+
+      stats
     end
 
     # Streams optimized images directly into the backup archive.
@@ -128,27 +135,31 @@ module BackupRestoreNew
         return
       end
 
+      stats = nil
+
       log_step("Adding optimized images", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_optimized_images_stats = backuper.compress_optimized_images_into(output_stream)
+          stats = backuper.compress_optimized_images_into(output_stream)
         end
       end
 
-      if (error_count = @backup_optimized_images_stats.missing_count) > 0
-        @warnings = true
-        log_warning "Failed to add #{error_count} optimized images. See logfile for details."
+      if stats && stats.missing_count > 0
+        log_warning "Failed to add #{stats.missing_count} optimized images. See logfile for details."
       end
+
+      stats
     end
 
     # Overwrites the `meta.json` file at the beginning of the backup archive.
     # @param [MiniTarball::Writer] tar_writer
+    # @param [BackupRestoreNew::Backup::MetadataWriter] metadata_writer
     # @param [Integer] placeholder index of the placeholder
-    def add_metadata(tar_writer, placeholder)
+    def add_metadata(tar_writer, metadata_writer, placeholder)
       log_step("Adding metadata file") do
         tar_writer.with_placeholder(placeholder) do |writer|
           writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
-            Backup::MetadataWriter.new(@backup_uploads_stats, @backup_optimized_images_stats).write_into(output_stream)
+            metadata_writer.write_into(output_stream)
           end
         end
       end
@@ -219,18 +230,18 @@ module BackupRestoreNew
           log "Backup stored at: #{@backup_path}"
         end
 
-        if @warnings
+        if @logger.warnings?
           log_warning "Backup completed with warnings!"
         else
           log "Backup completed successfully!"
         end
 
         log_event "[SUCCESS]"
-        DiscourseEvent.trigger(:backup_complete, logs: @logger.logs, ticket: @ticket)
+        DiscourseEvent.trigger(:backup_complete, logs: @logger.logs, ticket: @opts[:ticket])
       else
         log_error "Backup failed!"
         log_event "[FAILED]"
-        DiscourseEvent.trigger(:backup_failed, logs: @logger.logs, ticket: @ticket)
+        DiscourseEvent.trigger(:backup_failed, logs: @logger.logs, ticket: @opts[:ticket])
       end
     end
 
@@ -244,15 +255,17 @@ module BackupRestoreNew
     end
 
     def calculate_path_overrides
-      if @backup_path_override.present?
-        archive_directory_override = File.dirname(@backup_path_override).sub(/^\.$/, "")
+      backup_path_override = @opts[:backup_path_override]
+
+      if @opts[:backup_path_override].present?
+        archive_directory_override = File.dirname(backup_path_override).sub(/^\.$/, "")
 
         if archive_directory_override.present? && @store.remote?
           log_warning "Only local backup storage supports overriding backup path."
           archive_directory_override = nil
         end
 
-        filename_override = File.basename(@backup_path_override).sub(/\.(sql\.gz|tar|tar\.gz|tgz)$/i, "")
+        filename_override = File.basename(backup_path_override).sub(/\.(sql\.gz|tar|tar\.gz|tgz)$/i, "")
         [archive_directory_override, filename_override]
       end
     end
