@@ -83,7 +83,8 @@ module DiscourseCLI
       @progressbar = ProgressBar.create(
         format: " %j%%  %t | %c / %C | %E",
         title: @message,
-        autofinish: false
+        autofinish: false,
+        smoothing: 0.5
       )
     end
 
@@ -108,12 +109,14 @@ module DiscourseCLI
     end
 
     def success
+      reset_current_line
       @progressbar.format = "%t | %c / %C | %E"
       @progressbar.title = " DONE ".green + " #{@message}"
       @progressbar.finish
     end
 
     def error
+      reset_current_line
       @progressbar.format = "%t | %c / %C | %E"
       @progressbar.title = " FAIL ".red + " #{@message}"
       @progressbar.finish
@@ -123,6 +126,10 @@ module DiscourseCLI
 
     def log_progress
       @logger.log_to_logfile("#{@message} | #{@progress} / #{@max_progress}")
+    end
+
+    def reset_current_line
+      print "\033[K" # delete the output of progressbar, because it doesn't overwrite longer lines
     end
   end
 end
