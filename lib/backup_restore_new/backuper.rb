@@ -47,7 +47,7 @@ module BackupRestoreNew
 
         BackupRestoreNew::Operation.start
 
-        timestamp = Time.now.utc.strftime("%Y-%m-%d-%H%M%S")
+        timestamp = Time.now.utc.strftime("%Y-%m-%dT%H%M%SZ")
         current_db = RailsMultisite::ConnectionManagement.current_db
         archive_directory_override, filename_override = calculate_path_overrides
         archive_directory = archive_directory_override || BackupRestore::LocalBackupStore.base_directory(db: current_db)
