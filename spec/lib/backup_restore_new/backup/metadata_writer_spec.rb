@@ -45,8 +45,8 @@ describe BackupRestoreNew::Backup::MetadataWriter do
         s3_cdn_url: nil,
         db_name: "default",
         multisite: false,
-        uploads: { total_count: 0, included_count: 0, missing_count: 0 },
-        optimized_images: { total_count: 0, included_count: 0, missing_count: 0 },
+        uploads: nil,
+        optimized_images: nil,
         plugins: []
       }.deep_merge(expected_data_overrides)
 
@@ -65,14 +65,14 @@ describe BackupRestoreNew::Backup::MetadataWriter do
         BackupRestoreNew::Backup::UploadStats.new(
           total_count: 83_829,
           included_count: 83_827,
-          failed_ids: [29329, 39202]
+          missing_count: 2
         )
       end
       let(:backup_optimized_images_result) do
         BackupRestoreNew::Backup::UploadStats.new(
           total_count: 251_487,
           included_count: 251_481,
-          failed_ids: [23880, 39828, 48520, 59329, 92939, 110392]
+          missing_count: 6
         )
       end
 

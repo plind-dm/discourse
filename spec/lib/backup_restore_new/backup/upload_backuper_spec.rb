@@ -134,14 +134,15 @@ describe BackupRestoreNew::Backup::UploadBackuper do
     shared_examples "compression and error logging" do
       it "compresses existing files and logs missing files" do
         io = StringIO.new
-        missing_upload1 = Fabricate(upload_type)
+        _missing_upload1 = Fabricate(upload_type)
 
         upload_paths, uploaded_files = create_uploads(
           "smallest.png" => file_from_fixtures("smallest.png"),
           "small.pdf" => file_from_fixtures("small.pdf", "pdf")
         )
 
-        missing_upload2 = Fabricate(upload_type)
+        _missing_upload2 = Fabricate(upload_type)
+        _missing_upload3 = Fabricate(upload_type)
 
         result = subject.compress_uploads_into(io)
         decompressed_paths, decompressed_files = decompress(io)
@@ -149,9 +150,9 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
         expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
-        expect(result.total_count).to eq(4)
+        expect(result.total_count).to eq(5)
         expect(result.included_count).to eq(2)
-        expect(result.failed_ids).to contain_exactly(missing_upload1.id, missing_upload2.id)
+        expect(result.missing_count).to eq(3)
       end
     end
 
@@ -192,7 +193,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
         expect(result.total_count).to eq(2)
         expect(result.included_count).to eq(2)
-        expect(result.failed_ids).to be_blank
+        expect(result.missing_count).to eq(0)
 
         SiteSetting.enable_s3_uploads = false
         io = StringIO.new
@@ -204,7 +205,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
         expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
         expect(result.total_count).to eq(2)
         expect(result.included_count).to eq(2)
-        expect(result.failed_ids).to be_blank
+        expect(result.missing_count).to eq(0)
       end
     end
   end
@@ -213,14 +214,15 @@ describe BackupRestoreNew::Backup::UploadBackuper do
     subject { described_class.new(Dir.mktmpdir, BackupRestoreNew::Logger::BaseProgressLogger.new) }
 
     it "includes optimized images stored locally" do
-      missing_image1 = Fabricate(:optimized_image)
+      _missing_image1 = Fabricate(:optimized_image)
 
       optimized_paths, optimized_files = create_optimized_images(
         "smallest.png" => file_from_fixtures("smallest.png"),
         "logo.png" => file_from_fixtures("logo.png")
       )
 
-      missing_image2 = Fabricate(:optimized_image)
+      _missing_image2 = Fabricate(:optimized_image)
+      _missing_image3 = Fabricate(:optimized_image)
 
       io = StringIO.new
       result = subject.compress_optimized_images_into(io)
@@ -229,9 +231,9 @@ describe BackupRestoreNew::Backup::UploadBackuper do
       expect(decompressed_paths).to eq(optimized_paths)
       expect(decompressed_files).to eq(optimized_files)
       expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
-      expect(result.total_count).to eq(4)
+      expect(result.total_count).to eq(5)
       expect(result.included_count).to eq(2)
-      expect(result.failed_ids).to contain_exactly(missing_image1.id, missing_image2.id)
+      expect(result.missing_count).to eq(3)
     end
 
     it "doesn't include optimized images stored on S3" do
@@ -251,7 +253,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
       expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
       expect(result.total_count).to eq(2)
       expect(result.included_count).to eq(0)
-      expect(result.failed_ids).to be_blank
+      expect(result.missing_count).to eq(0)
     end
   end
 end

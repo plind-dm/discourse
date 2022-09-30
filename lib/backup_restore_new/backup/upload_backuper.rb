@@ -21,25 +21,25 @@ module BackupRestoreNew
       end
 
       def compress_uploads_into(output_stream)
-        @result = create_result(Upload.by_users.count)
-        @progress_logger.start(@result.total_count)
+        @stats = create_stats(Upload.by_users.count)
+        @progress_logger.start(@stats.total_count)
 
         with_gzip(output_stream) do |tar_writer|
           add_original_files(tar_writer)
         end
 
-        @result
+        @stats
       end
 
       def compress_optimized_images_into(output_stream)
-        @result = create_result(OptimizedImage.by_users.count)
-        @progress_logger.start(@result.total_count)
+        @stats = create_stats(OptimizedImage.by_users.count)
+        @progress_logger.start(@stats.total_count)
 
         with_gzip(output_stream) do |tar_writer|
           add_optimized_files(tar_writer)
         end
 
-        @result
+        @stats
       end
 
       private
@@ -57,10 +57,9 @@ module BackupRestoreNew
             if absolute_path.present?
               if File.exist?(absolute_path)
                 tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
-                @result.included_count += 1
+                @stats.included_count += 1
               else
-                # TODO Do we really need to store the failed IDs?
-                @result.failed_ids << upload.id
+                @stats.missing_count += 1
                 @progress_logger.log("Failed to locate file for upload with ID #{upload.id}")
               end
             end
@@ -77,10 +76,9 @@ module BackupRestoreNew
 
           if File.exist?(absolute_path)
             tar_writer.add_file(name: relative_path, source_file_path: absolute_path)
-            @result.included_count += 1
+            @stats.included_count += 1
           else
-            # TODO Do we really need to store the failed IDs?
-            @result.failed_ids << optimized_image.id
+            @stats.missing_count += 1
             @progress_logger.log("Failed to locate file for optimized image with ID #{optimized_image.id}")
           end
 
@@ -101,7 +99,7 @@ module BackupRestoreNew
             s3_store.download_file(upload, absolute_path)
           rescue => ex
             absolute_path = nil
-            @result.failed_ids << upload.id
+            @stats.missing_count += 1
             @progress_logger.log("Failed to download file from S3 for upload with ID #{upload.id}", ex)
           end
         end
@@ -123,7 +121,7 @@ module BackupRestoreNew
         @upload_path_prefix ||= File.join(Rails.root, "public", base_store.upload_path)
       end
 
-      def create_result(total)
+      def create_stats(total)
         BackupRestoreNew::Backup::UploadStats.new(total_count: total)
       end
     end

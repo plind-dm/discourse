@@ -110,11 +110,11 @@ module BackupRestoreNew
       log_step("Adding uploads", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_uploads_result = backuper.compress_uploads_into(output_stream)
+          @backup_uploads_stats = backuper.compress_uploads_into(output_stream)
         end
       end
 
-      if (error_count = @backup_uploads_result.failed_ids.size) > 0
+      if (error_count = @backup_uploads_stats.missing_count) > 0
         @warnings = true
         log_warning "Failed to add #{error_count} uploads. See logfile for details."
       end
@@ -131,11 +131,11 @@ module BackupRestoreNew
       log_step("Adding optimized images", with_progress: true) do |progress_logger|
         tar_writer.add_file_from_stream(name: BackupRestoreNew::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
-          @backup_optimized_images_result = backuper.compress_optimized_images_into(output_stream)
+          @backup_optimized_images_stats = backuper.compress_optimized_images_into(output_stream)
         end
       end
 
-      if (error_count = @backup_optimized_images_result.failed_ids.size) > 0
+      if (error_count = @backup_optimized_images_stats.missing_count) > 0
         @warnings = true
         log_warning "Failed to add #{error_count} optimized images. See logfile for details."
       end
@@ -148,7 +148,7 @@ module BackupRestoreNew
       log_step("Adding metadata file") do
         tar_writer.with_placeholder(placeholder) do |writer|
           writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
-            Backup::MetadataWriter.new(@backup_uploads_result, @backup_optimized_images_result).write_into(output_stream)
+            Backup::MetadataWriter.new(@backup_uploads_stats, @backup_optimized_images_stats).write_into(output_stream)
           end
         end
       end

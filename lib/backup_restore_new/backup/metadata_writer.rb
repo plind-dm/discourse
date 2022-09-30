@@ -7,9 +7,9 @@ module BackupRestoreNew
     class MetadataWriter
       attr_accessor :upload_stats, :optimized_image_stats
 
-      def initialize(uploads_result = nil, optimized_images_result = nil)
-        @upload_stats = result_to_stats(uploads_result)
-        @optimized_image_stats = result_to_stats(optimized_images_result)
+      def initialize(uploads_stats = nil, optimized_images_stats = nil)
+        @upload_stats = uploads_stats
+        @optimized_image_stats = optimized_images_stats
       end
 
       def write_into(output_stream)
@@ -41,14 +41,6 @@ module BackupRestoreNew
         }
 
         JSON.pretty_generate(data)
-      end
-
-      def result_to_stats(result)
-        {
-          total_count: result&.total_count || 0,
-          included_count: result&.included_count || 0,
-          missing_count: result&.failed_ids&.size || 0,
-        }
       end
 
       def plugin_list
