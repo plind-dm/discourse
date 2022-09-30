@@ -12,7 +12,8 @@ module DiscourseCLI
       super()
 
       timestamp = Time.now.utc.strftime("%Y-%m-%dT%H%M%SZ")
-      path = File.join(Rails.root, "tmp", "cli")
+      current_db = RailsMultisite::ConnectionManagement.current_db
+      path = File.join(Rails.root, "log", "backups", current_db)
       FileUtils.mkdir_p(path)
       path = File.join(path, "#{name}-#{timestamp}.log")
 
