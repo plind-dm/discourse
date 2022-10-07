@@ -277,7 +277,6 @@ gem 'net-http'
 
 # used by backup and restore
 gem 'colored2', require: false
-# gem 'mini_tarball', require: false
-gem 'mini_tarball', require: false, path: '~/Repositories/mini_tarball'
+gem 'mini_tarball', require: false
 gem 'ruby-progressbar', require: false
 gem 'tty-spinner', require: false
