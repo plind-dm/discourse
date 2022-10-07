@@ -8,15 +8,12 @@ module DiscourseCLI
     desc "create", "Creates a backup"
     def create
       DiscourseCLI.load_rails
-      require_relative '../support/backup_restore_logger'
 
-      backuper = BackupRestoreNew::Backuper.new(
-        Discourse::SYSTEM_USER_ID,
-        BackupRestoreLogger.new("backup")
-      )
-      backuper.run
-
-      exit(1) unless backuper.success
+      with_logger("backup") do |logger|
+        backuper = BackupRestoreNew::Backuper.new(Discourse::SYSTEM_USER_ID, logger)
+        backuper.run
+        exit(1) unless backuper.success
+      end
     end
 
     desc "restore FILENAME", "Restores a backup"
@@ -37,6 +34,16 @@ module DiscourseCLI
     desc "download", "Downloads a backup"
     def download
 
+    end
+
+    no_commands do
+      private def with_logger(name)
+        require_relative '../support/logger'
+        logger = DiscourseCLI::Logger.new(name)
+        yield logger
+      ensure
+        logger.close if logger
+      end
     end
   end
 end

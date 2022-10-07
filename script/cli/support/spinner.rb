@@ -31,7 +31,7 @@ module DiscourseCLI
   end
 
   module HasSpinner
-    protected
+    private
 
     def spin(title, abort_on_error)
       result = nil
@@ -62,36 +62,27 @@ module DiscourseCLI
     def create_spinner(show_warning_instead_of_error:)
       output = $stderr
 
-      if output.tty?
-        if ENV['RM_INFO']
-          DummySpinner.new(
-            success_mark: "✓ DONE".green,
-            error_mark: show_warning_instead_of_error ? "⚠ WARNING".yellow : "✘ ERROR".red
-          )
-        else
-          TTY::Spinner.new(
-            ":spinner :title",
-            success_mark: " DONE ".green,
-            error_mark: show_warning_instead_of_error ? " WARN ".yellow : " FAIL ".red,
-            interval: 10,
-            frames: [
-              " ●    ",
-              "  ●   ",
-              "   ●  ",
-              "    ● ",
-              "     ●",
-              "    ● ",
-              "   ●  ",
-              "  ●   ",
-              " ●    ",
-              "●     "
-            ]
-          )
-        end
+      if output.tty? && !ENV['RM_INFO'] # special case for RubyMine
+        TTY::Spinner.new(
+          ":spinner :title",
+          success_mark: "DONE ".green,
+          error_mark: show_warning_instead_of_error ? "WARN ".yellow : "FAIL ".red,
+          interval: 10,
+          frames: [
+            "     ",
+            "   = ",
+            "  == ",
+            " === ",
+            "==== ",
+            "===  ",
+            "==   ",
+            "=    "
+          ]
+        )
       else
         DummySpinner.new(
-          success_mark: "✓ DONE",
-          error_mark: show_warning_instead_of_error ? "⚠ WARNING" : "✘ ERROR"
+          success_mark: "DONE".green,
+          error_mark: show_warning_instead_of_error ? "WARN".yellow : "FAIL".red
         )
       end
     end
