@@ -35,7 +35,8 @@ describe BackupRestoreNew::Backup::MetadataWriter do
       expect(io.string).to be_present
 
       expected_data = {
-        version: Discourse::VERSION::STRING,
+        backup_format: 2,
+        discourse_version: Discourse::VERSION::STRING,
         db_version: 20220926152703,
         git_version: "c0924f0cae1264ed1d00dda3f6c5417cdb750cf0",
         git_branch: "main",

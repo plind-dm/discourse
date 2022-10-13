@@ -25,7 +25,8 @@ module BackupRestoreNew
 
       def json
         @cached_data ||= {
-          version: Discourse::VERSION::STRING,
+          backup_format: FILE_FORMAT,
+          discourse_version: Discourse::VERSION::STRING,
           db_version: Database.current_core_migration_version,
           git_version: Discourse.git_version,
           git_branch: Discourse.git_branch,
