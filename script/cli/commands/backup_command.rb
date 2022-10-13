@@ -38,8 +38,7 @@ module DiscourseCLI
 
     no_commands do
       private def with_logger(name)
-        require_relative '../support/logger'
-        logger = DiscourseCLI::Logger.new(name)
+        logger = BackupRestoreNew::Logger::CliLogger.new(name)
         yield logger
       ensure
         logger.close if logger
