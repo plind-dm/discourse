@@ -5,7 +5,7 @@ require 'rails_helper'
 describe BackupRestoreV2::Backuper do
   fab!(:admin) { Fabricate(:admin) }
   let!(:logger) do
-    Class.new(BackupRestoreV2::Logger::Base) do
+    Class.new(BackupRestoreV2::Logger::BaseLogger) do
       def log(message, level: nil)
         @logs << message
       end
@@ -38,7 +38,7 @@ describe BackupRestoreV2::Backuper do
 
   def expect_tar_creation(tar_writer, site_name)
     current_db = RailsMultisite::ConnectionManagement.current_db
-    filename = File.join(Rails.root, "public", "backups", current_db, "#{site_name}-2021-03-24-202731.tar")
+    filename = File.join(Rails.root, "public", "backups", current_db, "#{site_name}-2021-03-24T202731Z.tar")
 
     MiniTarball::Writer.expects(:create)
       .with(filename)

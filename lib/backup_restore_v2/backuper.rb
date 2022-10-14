@@ -271,7 +271,7 @@ module BackupRestoreV2
     end
 
     def skip_uploads?
-      @opts[:with_uploads] != true
+      !@opts.fetch(:with_uploads, true)
     end
   end
 end
