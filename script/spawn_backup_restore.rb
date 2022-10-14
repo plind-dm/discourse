@@ -34,6 +34,8 @@ fork do
     backup
   when "restore"
     restore
+  when "backup_v2"
+    backup_v2
   else
     raise "Unknown argument: #{ARGV[0]}"
   end

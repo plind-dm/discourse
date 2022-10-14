@@ -2,14 +2,14 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Database do
+describe BackupRestoreV2::Database do
   def absolute_path(path)
     Rails.root.join(path).to_s
   end
 
   describe ".database_configuration" do
     it "returns a DatabaseConfiguration" do
-      expect(described_class.database_configuration).to be_a(BackupRestoreNew::DatabaseConfiguration)
+      expect(described_class.database_configuration).to be_a(BackupRestoreV2::DatabaseConfiguration)
     end
   end
 

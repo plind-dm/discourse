@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Logger
     class BaseProgressLogger
       def start(max_progress); end

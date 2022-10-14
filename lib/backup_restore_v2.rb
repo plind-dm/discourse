@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   FILE_FORMAT = 2
   DUMP_FILE = "dump.sql.gz"
   UPLOADS_FILE = "uploads.tar.gz"

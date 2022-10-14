@@ -3,7 +3,7 @@
 require 'colored2'
 require 'tty-spinner'
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Logger
     class CliLogger < BaseLogger
       def initialize(name)

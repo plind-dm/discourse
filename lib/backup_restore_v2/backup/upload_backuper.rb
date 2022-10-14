@@ -2,7 +2,7 @@
 
 require 'mini_tarball'
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Backup
     class UploadBackuper
       def self.include_uploads?
@@ -122,7 +122,7 @@ module BackupRestoreNew
       end
 
       def create_stats(total)
-        BackupRestoreNew::Backup::UploadStats.new(total_count: total)
+        BackupRestoreV2::Backup::UploadStats.new(total_count: total)
       end
     end
   end

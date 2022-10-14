@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   DatabaseConfiguration = Struct.new(:host, :port, :username, :password, :database)
 
   module Database

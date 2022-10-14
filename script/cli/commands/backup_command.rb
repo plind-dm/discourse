@@ -10,7 +10,7 @@ module DiscourseCLI
       DiscourseCLI.load_rails
 
       with_logger("backup") do |logger|
-        backuper = BackupRestoreNew::Backuper.new(Discourse::SYSTEM_USER_ID, logger)
+        backuper = BackupRestoreV2::Backuper.new(Discourse::SYSTEM_USER_ID, logger)
         backuper.run
         exit(1) unless backuper.success
       end
@@ -38,7 +38,7 @@ module DiscourseCLI
 
     no_commands do
       private def with_logger(name)
-        logger = BackupRestoreNew::Logger::CliLogger.new(name)
+        logger = BackupRestoreV2::Logger::CliLogger.new(name)
         yield logger
       ensure
         logger.close if logger

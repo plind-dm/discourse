@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Backup
     DatabaseBackupError = Class.new(RuntimeError)
 
     class DatabaseDumper
       attr_reader :log_lines
 
-      def initialize(schema: BackupRestoreNew::Database::MAIN_SCHEMA, verbose: false)
+      def initialize(schema: BackupRestoreV2::Database::MAIN_SCHEMA, verbose: false)
         @schema = schema
         @verbose = verbose
         @log_lines = []
@@ -32,7 +32,7 @@ module BackupRestoreNew
       private
 
       def pg_dump_command
-        db_conf = BackupRestoreNew::Database.database_configuration
+        db_conf = BackupRestoreV2::Database.database_configuration
         env = db_conf.password.present? ? { "PGPASSWORD" => db_conf.password } : {}
 
         host_argument     = "--host=#{db_conf.host}"           if db_conf.host.present?

@@ -34,6 +34,10 @@ class Admin::BackupsController < Admin::AdminController
   end
 
   def create
+    # logger = BackupRestoreV2::Logger::WebLogger.new(current_user.id, params[:client_id], "backup")
+    # backuper = BackupRestoreV2::Backuper.new(current_user.id, logger)
+    # backuper.run
+
     opts = {
       publish_to_message_bus: true,
       with_uploads: params.fetch(:with_uploads) == "true",

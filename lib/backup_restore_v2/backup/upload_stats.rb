@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Backup
     class UploadStats
       attr_accessor :total_count, :included_count, :missing_count

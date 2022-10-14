@@ -2136,6 +2136,9 @@ backups:
   include_s3_uploads_in_backups:
     default: false
     hidden: true
+  experimental_backup_version:
+    default: false
+    hidden: true
 
 search:
   use_pg_headlines_for_excerpt:

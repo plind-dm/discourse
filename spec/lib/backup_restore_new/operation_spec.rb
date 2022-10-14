@@ -3,7 +3,7 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Operation do
+describe BackupRestoreV2::Operation do
   before do
     Discourse.redis.del(described_class::RUNNING_KEY)
     Discourse.redis.del(described_class::ABORT_KEY)
@@ -15,7 +15,7 @@ describe BackupRestoreNew::Operation do
     described_class.start
     expect(described_class.running?).to eq(true)
 
-    expect { described_class.start }.to raise_error(BackupRestoreNew::OperationRunningError)
+    expect { described_class.start }.to raise_error(BackupRestoreV2::OperationRunningError)
 
     described_class.finish
     expect(described_class.running?).to eq(false)

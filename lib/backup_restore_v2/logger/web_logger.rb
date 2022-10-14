@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Logger
     class WebLogger < BaseLogger
       # @param operation "backup" or "restore"
@@ -32,7 +32,7 @@ module BackupRestoreNew
 
       def publish_log(message, timestamp)
         data = { timestamp: timestamp, operation: @operation, message: message }
-        MessageBus.publish(BackupRestoreNew::LOGS_CHANNEL, data, user_ids: [@user_id], client_ids: [@client_id])
+        MessageBus.publish(BackupRestoreV2::LOGS_CHANNEL, data, user_ids: [@user_id], client_ids: [@client_id])
       end
 
       def save_log(message, timestamp)

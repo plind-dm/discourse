@@ -2,7 +2,7 @@
 
 require 'json'
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Backup
     class MetadataWriter
       attr_accessor :upload_stats, :optimized_image_stats

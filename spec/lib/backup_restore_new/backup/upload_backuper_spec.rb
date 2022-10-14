@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'rubygems/package'
 
-describe BackupRestoreNew::Backup::UploadBackuper do
+describe BackupRestoreV2::Backup::UploadBackuper do
   before do
     SiteSetting.authorized_extensions = 'png|pdf'
   end
@@ -129,7 +129,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
   describe "#compress_uploads" do
     before { @tmp_directory = Dir.mktmpdir }
     after { FileUtils.rm_rf(@tmp_directory) }
-    subject { described_class.new(@tmp_directory, BackupRestoreNew::Logger::BaseProgressLogger.new) }
+    subject { described_class.new(@tmp_directory, BackupRestoreV2::Logger::BaseProgressLogger.new) }
 
     shared_examples "compression and error logging" do
       it "compresses existing files and logs missing files" do
@@ -149,7 +149,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result).to be_a(BackupRestoreV2::Backup::UploadStats)
         expect(result.total_count).to eq(5)
         expect(result.included_count).to eq(2)
         expect(result.missing_count).to eq(3)
@@ -190,7 +190,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result).to be_a(BackupRestoreV2::Backup::UploadStats)
         expect(result.total_count).to eq(2)
         expect(result.included_count).to eq(2)
         expect(result.missing_count).to eq(0)
@@ -202,7 +202,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
         expect(decompressed_paths).to eq(upload_paths)
         expect(decompressed_files).to eq(uploaded_files)
-        expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+        expect(result).to be_a(BackupRestoreV2::Backup::UploadStats)
         expect(result.total_count).to eq(2)
         expect(result.included_count).to eq(2)
         expect(result.missing_count).to eq(0)
@@ -211,7 +211,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
   end
 
   describe "#add_optimized_files" do
-    subject { described_class.new(Dir.mktmpdir, BackupRestoreNew::Logger::BaseProgressLogger.new) }
+    subject { described_class.new(Dir.mktmpdir, BackupRestoreV2::Logger::BaseProgressLogger.new) }
 
     it "includes optimized images stored locally" do
       _missing_image1 = Fabricate(:optimized_image)
@@ -230,7 +230,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       expect(decompressed_paths).to eq(optimized_paths)
       expect(decompressed_files).to eq(optimized_files)
-      expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+      expect(result).to be_a(BackupRestoreV2::Backup::UploadStats)
       expect(result.total_count).to eq(5)
       expect(result.included_count).to eq(2)
       expect(result.missing_count).to eq(3)
@@ -250,7 +250,7 @@ describe BackupRestoreNew::Backup::UploadBackuper do
 
       expect(decompressed_paths).to be_blank
       expect(decompressed_files).to be_blank
-      expect(result).to be_a(BackupRestoreNew::Backup::UploadStats)
+      expect(result).to be_a(BackupRestoreV2::Backup::UploadStats)
       expect(result.total_count).to eq(2)
       expect(result.included_count).to eq(0)
       expect(result.missing_count).to eq(0)

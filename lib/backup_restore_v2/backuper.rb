@@ -3,7 +3,7 @@
 require 'etc'
 require 'mini_tarball'
 
-module BackupRestoreNew
+module BackupRestoreV2
   class Backuper
     delegate :log, :log_event, :log_step, :log_warning, :log_error, to: :@logger, private: true
     attr_reader :success
@@ -30,7 +30,7 @@ module BackupRestoreNew
       @backup_path
     rescue SystemExit, SignalException
       log_warning "Backup operation was canceled!"
-    rescue BackupRestoreNew::OperationRunningError
+    rescue BackupRestoreV2::OperationRunningError
       log_error "Operation is already running"
     ensure
       clean_up
@@ -45,7 +45,7 @@ module BackupRestoreNew
         @success = false
         @store = BackupRestore::BackupStore.create
 
-        BackupRestoreNew::Operation.start
+        BackupRestoreV2::Operation.start
 
         timestamp = Time.now.utc.strftime("%Y-%m-%dT%H%M%SZ")
         current_db = RailsMultisite::ConnectionManagement.current_db
@@ -67,7 +67,7 @@ module BackupRestoreNew
     end
 
     def create_backup
-      metadata_writer = BackupRestoreNew::Backup::MetadataWriter.new
+      metadata_writer = BackupRestoreV2::Backup::MetadataWriter.new
 
       MiniTarball::Writer.create(@backup_path) do |tar_writer|
         metadata_placeholder = add_metadata_placeholder(tar_writer, metadata_writer)
@@ -83,11 +83,11 @@ module BackupRestoreNew
     # metadata without downloading the whole file. The file size is estimated because some of the data
     # is still unknown at this time.
     # @param [MiniTarball::Writer] tar_writer
-    # @param [BackupRestoreNew::Backup::MetadataWriter] metadata_writer
+    # @param [BackupRestoreV2::Backup::MetadataWriter] metadata_writer
     # @return [Integer] index of the placeholder
     def add_metadata_placeholder(tar_writer, metadata_writer)
       tar_writer.add_file_placeholder(
-        name: BackupRestoreNew::METADATA_FILE,
+        name: BackupRestoreV2::METADATA_FILE,
         file_size: metadata_writer.estimated_file_size
       )
     end
@@ -96,7 +96,7 @@ module BackupRestoreNew
     # @param [MiniTarball::Writer] tar_writer
     def add_db_dump(tar_writer)
       log_step("Creating database dump") do
-        tar_writer.add_file_from_stream(name: BackupRestoreNew::DUMP_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreV2::DUMP_FILE, **tar_file_attributes) do |output_stream|
           dumper = Backup::DatabaseDumper.new
           dumper.dump_schema_into(output_stream)
         end
@@ -114,7 +114,7 @@ module BackupRestoreNew
       stats = nil
 
       log_step("Adding uploads", with_progress: true) do |progress_logger|
-        tar_writer.add_file_from_stream(name: BackupRestoreNew::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreV2::UPLOADS_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
           stats = backuper.compress_uploads_into(output_stream)
         end
@@ -138,7 +138,7 @@ module BackupRestoreNew
       stats = nil
 
       log_step("Adding optimized images", with_progress: true) do |progress_logger|
-        tar_writer.add_file_from_stream(name: BackupRestoreNew::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
+        tar_writer.add_file_from_stream(name: BackupRestoreV2::OPTIMIZED_IMAGES_FILE, **tar_file_attributes) do |output_stream|
           backuper = Backup::UploadBackuper.new(@tmp_directory, progress_logger)
           stats = backuper.compress_optimized_images_into(output_stream)
         end
@@ -153,12 +153,12 @@ module BackupRestoreNew
 
     # Overwrites the `meta.json` file at the beginning of the backup archive.
     # @param [MiniTarball::Writer] tar_writer
-    # @param [BackupRestoreNew::Backup::MetadataWriter] metadata_writer
+    # @param [BackupRestoreV2::Backup::MetadataWriter] metadata_writer
     # @param [Integer] placeholder index of the placeholder
     def add_metadata(tar_writer, metadata_writer, placeholder)
       log_step("Adding metadata file") do
         tar_writer.with_placeholder(placeholder) do |writer|
-          writer.add_file_from_stream(name: BackupRestoreNew::METADATA_FILE, **tar_file_attributes) do |output_stream|
+          writer.add_file_from_stream(name: BackupRestoreV2::METADATA_FILE, **tar_file_attributes) do |output_stream|
             metadata_writer.write_into(output_stream)
           end
         end
@@ -216,7 +216,7 @@ module BackupRestoreNew
 
     def complete
       begin
-        BackupRestoreNew::Operation.finish
+        BackupRestoreV2::Operation.finish
       rescue => e
         log_error "Failed to mark operation as finished", e
       end

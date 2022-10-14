@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Logger::WebLogger do
+describe BackupRestoreV2::Logger::WebLogger do
   fab!(:admin) { Fabricate(:admin) }
   let(:operation) { "backup" }
   let(:client_id) { 42 }
@@ -17,7 +17,7 @@ describe BackupRestoreNew::Logger::WebLogger do
     messages.each_with_index do |message, index|
       published_message = published_messages[index]
 
-      expected_attributes = { channel: BackupRestoreNew::LOGS_CHANNEL, user_ids: [admin.id], client_ids: [client_id] }
+      expected_attributes = { channel: BackupRestoreV2::LOGS_CHANNEL, user_ids: [admin.id], client_ids: [client_id] }
       expect(published_message).to have_attributes(expected_attributes)
 
       expected_data = { operation: "backup", message: message, timestamp: "2022-10-13 21:20:17" }
@@ -73,7 +73,7 @@ describe BackupRestoreNew::Logger::WebLogger do
 
       it "yields control" do
         expect { |block| subject.log_step("Step 6: Rendezvous", with_progress: true, &block) }
-          .to yield_with_args(BackupRestoreNew::Logger::BaseProgressLogger)
+          .to yield_with_args(BackupRestoreV2::Logger::BaseProgressLogger)
       end
     end
   end
@@ -110,10 +110,10 @@ describe BackupRestoreNew::Logger::WebLogger do
       subject.log("Foo")
       expect(subject.warnings?).to eq(false)
 
-      subject.log("Error", level: BackupRestoreNew::Logger::ERROR)
+      subject.log("Error", level: BackupRestoreV2::Logger::ERROR)
       expect(subject.warnings?).to eq(false)
 
-      subject.log("Warning", level: BackupRestoreNew::Logger::WARNING)
+      subject.log("Warning", level: BackupRestoreV2::Logger::WARNING)
       expect(subject.warnings?).to eq(true)
     end
   end
@@ -134,10 +134,10 @@ describe BackupRestoreNew::Logger::WebLogger do
       subject.log("Foo")
       expect(subject.errors?).to eq(false)
 
-      subject.log("Warning", level: BackupRestoreNew::Logger::WARNING)
+      subject.log("Warning", level: BackupRestoreV2::Logger::WARNING)
       expect(subject.errors?).to eq(false)
 
-      subject.log("Error", level: BackupRestoreNew::Logger::ERROR)
+      subject.log("Error", level: BackupRestoreV2::Logger::ERROR)
       expect(subject.errors?).to eq(true)
     end
   end

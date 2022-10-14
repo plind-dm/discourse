@@ -2,10 +2,10 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Backuper do
+describe BackupRestoreV2::Backuper do
   fab!(:admin) { Fabricate(:admin) }
   let!(:logger) do
-    Class.new(BackupRestoreNew::Logger::Base) do
+    Class.new(BackupRestoreV2::Logger::Base) do
       def log(message, level: nil)
         @logs << message
       end
@@ -19,7 +19,7 @@ describe BackupRestoreNew::Backuper do
   subject { described_class.new(admin.id, logger) }
 
   def execute_failed_backup
-    BackupRestoreNew::Operation.stubs(:start).raises(BackupRestoreNew::OperationRunningError)
+    BackupRestoreV2::Operation.stubs(:start).raises(BackupRestoreV2::OperationRunningError)
     subject.run
   end
 
@@ -49,7 +49,7 @@ describe BackupRestoreNew::Backuper do
   def expect_db_dump_added_to_tar(tar_writer)
     output_stream = mock("db_dump_output_stream")
 
-    BackupRestoreNew::Backup::DatabaseDumper.any_instance.expects(:dump_schema_into)
+    BackupRestoreV2::Backup::DatabaseDumper.any_instance.expects(:dump_schema_into)
       .with(output_stream)
       .once
 
@@ -62,13 +62,13 @@ describe BackupRestoreNew::Backuper do
   def expect_uploads_added_to_tar(tar_writer)
     output_stream = mock("uploads_stream")
 
-    BackupRestoreNew::Backup::UploadBackuper.any_instance
+    BackupRestoreV2::Backup::UploadBackuper.any_instance
       .expects(:compress_uploads_into)
       .with(output_stream)
-      .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
+      .returns(BackupRestoreV2::Backup::UploadStats.new(total_count: 42))
       .once
 
-    BackupRestoreNew::Backup::UploadBackuper.expects(:include_uploads?)
+    BackupRestoreV2::Backup::UploadBackuper.expects(:include_uploads?)
       .returns(true)
       .once
 
@@ -81,13 +81,13 @@ describe BackupRestoreNew::Backuper do
   def expect_optimized_images_added_to_tar(tar_writer)
     output_stream = mock("optimized_images_stream")
 
-    BackupRestoreNew::Backup::UploadBackuper.any_instance
+    BackupRestoreV2::Backup::UploadBackuper.any_instance
       .expects(:compress_optimized_images_into)
       .with(output_stream)
-      .returns(BackupRestoreNew::Backup::UploadStats.new(total_count: 42))
+      .returns(BackupRestoreV2::Backup::UploadStats.new(total_count: 42))
       .once
 
-    BackupRestoreNew::Backup::UploadBackuper.expects(:include_optimized_images?)
+    BackupRestoreV2::Backup::UploadBackuper.expects(:include_optimized_images?)
       .returns(true)
       .once
 
@@ -100,11 +100,11 @@ describe BackupRestoreNew::Backuper do
   def expect_metadata_added_to_tar(tar_writer)
     output_stream = mock("metadata_stream")
 
-    BackupRestoreNew::Backup::MetadataWriter.any_instance.expects(:estimated_file_size)
+    BackupRestoreV2::Backup::MetadataWriter.any_instance.expects(:estimated_file_size)
       .returns(417)
       .once
 
-    BackupRestoreNew::Backup::MetadataWriter.any_instance.expects(:write_into)
+    BackupRestoreV2::Backup::MetadataWriter.any_instance.expects(:write_into)
       .with(output_stream)
       .once
 

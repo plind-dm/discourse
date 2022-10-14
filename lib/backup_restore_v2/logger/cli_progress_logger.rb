@@ -3,7 +3,7 @@
 require 'colored2'
 require 'ruby-progressbar'
 
-module BackupRestoreNew
+module BackupRestoreV2
   module Logger
     class CliProgressLogger < BaseProgressLogger
       def initialize(message, logger)

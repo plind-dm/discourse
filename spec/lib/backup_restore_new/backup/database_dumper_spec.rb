@@ -2,13 +2,13 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Backup::DatabaseDumper do
+describe BackupRestoreV2::Backup::DatabaseDumper do
   let(:io) { StringIO.new }
 
   describe "#dump_public_schema" do
     it "raises an exception when the last output of pg_dump is an error" do
       dumper = described_class.new(schema: "non_existent_schema")
-      expect { dumper.dump_schema_into(io) }.to raise_error(BackupRestoreNew::Backup::DatabaseBackupError)
+      expect { dumper.dump_schema_into(io) }.to raise_error(BackupRestoreV2::Backup::DatabaseBackupError)
     end
 
     it "dumps the public schema by default" do

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module BackupRestoreNew
+module BackupRestoreV2
   class OperationRunningError < RuntimeError; end
 
   class Operation
@@ -9,7 +9,7 @@ module BackupRestoreNew
 
     def self.start
       if !Discourse.redis.set(RUNNING_KEY, "1", ex: 60, nx: true)
-        raise BackupRestoreNew::OperationRunningError
+        raise BackupRestoreV2::OperationRunningError
       end
 
       @keep_running_thread = keep_running

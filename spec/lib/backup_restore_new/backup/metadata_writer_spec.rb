@@ -3,14 +3,14 @@
 
 require 'rails_helper'
 
-describe BackupRestoreNew::Backup::MetadataWriter do
+describe BackupRestoreV2::Backup::MetadataWriter do
   subject { described_class.new(backup_uploads_result, backup_optimized_images_result) }
   let(:backup_uploads_result) { nil }
   let(:backup_optimized_images_result) { nil }
   let(:io) { StringIO.new }
 
   before do
-    BackupRestoreNew::Database.stubs(:current_core_migration_version).returns(20220926152703)
+    BackupRestoreV2::Database.stubs(:current_core_migration_version).returns(20220926152703)
     Discourse.stubs(:git_version).returns("c0924f0cae1264ed1d00dda3f6c5417cdb750cf0")
     Discourse.stubs(:git_branch).returns("main")
     Discourse.stubs(:base_url).returns("https://discourse.example.com")
@@ -63,14 +63,14 @@ describe BackupRestoreNew::Backup::MetadataWriter do
 
     context "with uploads and optimized images" do
       let(:backup_uploads_result) do
-        BackupRestoreNew::Backup::UploadStats.new(
+        BackupRestoreV2::Backup::UploadStats.new(
           total_count: 83_829,
           included_count: 83_827,
           missing_count: 2
         )
       end
       let(:backup_optimized_images_result) do
-        BackupRestoreNew::Backup::UploadStats.new(
+        BackupRestoreV2::Backup::UploadStats.new(
           total_count: 251_487,
           included_count: 251_481,
           missing_count: 6
@@ -120,7 +120,7 @@ describe BackupRestoreNew::Backup::MetadataWriter do
         instance.enabled_site_setting(enabled_setting_name)
         instance.stubs(:git_version).returns(git_version)
 
-        BackupRestoreNew::Database.stubs(:current_plugin_migration_version)
+        BackupRestoreV2::Database.stubs(:current_plugin_migration_version)
           .with(instance)
           .returns(db_version)
 
