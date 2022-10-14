@@ -106,7 +106,7 @@ module BackupRestoreV2
     # Streams uploaded files directly into the backup archive.
     # @param [MiniTarball::Writer] tar_writer
     def add_uploads(tar_writer)
-      if !Backup::UploadBackuper.include_uploads?
+      if skip_uploads? || !Backup::UploadBackuper.include_uploads?
         log "Skipping uploads"
         return
       end
@@ -130,7 +130,7 @@ module BackupRestoreV2
     # Streams optimized images directly into the backup archive.
     # @param [MiniTarball::Writer] tar_writer
     def add_optimized_images(tar_writer)
-      if !Backup::UploadBackuper.include_optimized_images?
+      if skip_uploads? || !Backup::UploadBackuper.include_optimized_images?
         log "Skipping optimized images"
         return
       end
@@ -268,6 +268,10 @@ module BackupRestoreV2
         filename_override = File.basename(backup_path_override).sub(/\.(sql\.gz|tar|tar\.gz|tgz)$/i, "")
         [archive_directory_override, filename_override]
       end
+    end
+
+    def skip_uploads?
+      @opts[:with_uploads] != true
     end
   end
 end

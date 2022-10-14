@@ -2,7 +2,7 @@
 
 module BackupRestoreV2
   module Logger
-    class WebLogger < BaseLogger
+    class DefaultLogger < BaseLogger
       # @param operation "backup" or "restore"
       def initialize(user_id, client_id, operation)
         super()

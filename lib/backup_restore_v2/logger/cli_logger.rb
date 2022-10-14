@@ -6,14 +6,14 @@ require 'tty-spinner'
 module BackupRestoreV2
   module Logger
     class CliLogger < BaseLogger
-      def initialize(name)
+      def initialize(operation)
         super()
 
         timestamp = Time.now.utc.strftime("%Y-%m-%dT%H%M%SZ")
         current_db = RailsMultisite::ConnectionManagement.current_db
         path = File.join(Rails.root, "log", "backups", current_db)
         FileUtils.mkdir_p(path)
-        path = File.join(path, "#{name}-#{timestamp}.log")
+        path = File.join(path, "#{operation}-#{timestamp}.log")
 
         @logfile = File.new(path, "w")
         log_to_stdout("Logging to #{path}")

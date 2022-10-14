@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-describe BackupRestoreV2::Logger::WebLogger do
+describe BackupRestoreV2::Logger::DefaultLogger do
   fab!(:admin) { Fabricate(:admin) }
   let(:operation) { "backup" }
   let(:client_id) { 42 }
