@@ -29,12 +29,21 @@
   </LinkTo>
 </li>
 {{#if @model.can_change_tracking_preferences}}
-  <li class="indent nav-categories">
-    <LinkTo @route="preferences.categories">
-      {{d-icon "folder"}}
-      <span>{{i18n "user.preferences_nav.categories"}}</span>
-    </LinkTo>
-  </li>
+  {{#if @currentUser.redesigned_user_page_nav_enabled}}
+    <li class="nav-tracking">
+      <LinkTo @route="preferences.tracking">
+        {{d-icon "plus"}}
+        <span>{{i18n "user.preferences_nav.tracking"}}</span>
+      </LinkTo>
+    </li>
+  {{else}}
+    <li class="indent nav-categories">
+      <LinkTo @route="preferences.categories">
+        {{d-icon "folder"}}
+        <span>{{i18n "user.preferences_nav.categories"}}</span>
+      </LinkTo>
+    </li>
+  {{/if}}
 {{/if}}
 <li class="indent nav-users">
   <LinkTo @route="preferences.users">
@@ -42,14 +51,16 @@
     <span>{{i18n "user.preferences_nav.users"}}</span>
   </LinkTo>
 </li>
-{{#if (and @model.can_change_tracking_preferences @siteSettings.tagging_enabled)}}
-  <li class="indent nav-tags">
-    <LinkTo @route="preferences.tags">
-      {{d-icon "tag"}}
-      <span>{{i18n "user.preferences_nav.tags"}}</span>
-    </LinkTo>
-  </li>
-{{/if}}
+{{#unless @currentUser.redesigned_user_page_nav_enabled}}
+  {{#if (and @model.can_change_tracking_preferences @siteSettings.tagging_enabled)}}
+    <li class="indent nav-tags">
+      <LinkTo @route="preferences.tags">
+        {{d-icon "tag"}}
+        <span>{{i18n "user.preferences_nav.tags"}}</span>
+      </LinkTo>
+    </li>
+  {{/if}}
+{{/unless}}
 <li class="nav-interface">
   <LinkTo @route="preferences.interface">
     {{d-icon "desktop"}}
@@ -65,10 +76,12 @@
   </li>
 {{/if}}
 <PluginOutlet @name="user-preferences-nav-under-interface" @connectorTagName="div" @args={{hash model=@model}} />
-<li class="nav-apps">
-  <LinkTo @route="preferences.apps">
-    {{d-icon "mobile-alt"}}
-    <span>{{i18n "user.preferences_nav.apps"}}</span>
-  </LinkTo>
-</li>
+{{#unless @currentUser.redesigned_user_page_nav_enabled}}
+  <li class="nav-apps">
+    <LinkTo @route="preferences.apps">
+      {{d-icon "mobile-alt"}}
+      <span>{{i18n "user.preferences_nav.apps"}}</span>
+    </LinkTo>
+  </li>
+{{/unless}}
 <PluginOutlet @name="user-preferences-nav" @connectorTagName="li" @args={{hash model=@model}} />
