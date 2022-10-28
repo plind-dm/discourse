@@ -110,6 +110,21 @@ export default Controller.extend({
     return [].concat(watched, watchedFirst, tracked, muted).filter((t) => t);
   },
 
+  @discourseComputed(
+    "model.watchedCategories",
+    "model.watchedFirstPostCategories",
+    "model.trackedCategories",
+    "model.mutedCategories"
+  )
+  selectedCategories(watched, watchedFirst, tracked, muted) {
+    return [].concat(watched, watchedFirst, tracked, muted).filter((t) => t);
+  },
+
+  @discourseComputed("siteSettings.remove_muted_tags_from_latest")
+  hideMutedTags() {
+    return this.siteSettings.remove_muted_tags_from_latest !== "never";
+  },
+
   canSave: or("canSee", "currentUser.admin"),
 
   actions: {
