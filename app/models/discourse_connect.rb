@@ -187,15 +187,17 @@ class DiscourseConnect < DiscourseConnectBase
   def synchronize_groups(user)
     names = (groups || "").split(",").map(&:downcase)
 
-    to_be_added = Group.where('LOWER(NAME) in (?) AND NOT automatic', names)
-    to_be_removed = Group.joins(:group_users).where(automatic: false, group_users: { user_id: user.id })
+    current_groups = user.groups.where(automatic: false)
+    desired_groups = Group.where('LOWER(NAME) in (?) AND NOT automatic', names)
 
-    if to_be_added.present?
-      to_be_removed = to_be_removed.where("groups.id NOT IN (?)", to_be_added.map(&:id)).to_a
+    to_be_added = desired_groups
+    if current_groups.present?
+      to_be_added = to_be_added.where("groups.id NOT IN (?)", current_groups.map(&:id))
     end
 
-    if to_be_removed.present?
-      to_be_added = to_be_added.where("groups.id NOT IN (?)", to_be_removed.map(&:id)).to_a
+    to_be_removed = current_groups
+    if desired_groups.present?
+      to_be_removed = to_be_removed.where("groups.id NOT IN (?)", desired_groups.map(&:id))
     end
 
     if to_be_added.present? || to_be_removed.present?

@@ -257,6 +257,7 @@ en:
     delete: "Delete"
     generic_error: "Sorry, an error has occurred."
     generic_error_with_reason: "An error occurred: %{error}"
+    multiple_errors: "Multiple errors occurred: %{errors}"
     sign_up: "Sign Up"
     log_in: "Log In"
     age: "Age"
@@ -4197,12 +4198,20 @@ en:
             unread_with_count: "Unread (%{count})"
             archive: "Archive"
         tags:
+          links:
+            add_tags:
+              content: "Add tags"
+              title: "You have not added any tags. Click to get started."
           none: "You have not added any tags."
           click_to_get_started: "Click here to get started."
           header_link_text: "Tags"
           header_action_title: "edit your sidebar tags"
           configure_defaults: "Configure defaults"
         categories:
+          links:
+            add_categories:
+              content: "Add categories"
+              title: "You have not added any categories. Click to get started."
           none: "You have not added any categories."
           click_to_get_started: "Click here to get started."
           header_link_text: "Categories"
@@ -5525,7 +5534,7 @@ en:
         trust_level_2_users: "Trust Level 2 Users"
         trust_level_3_requirements: "Trust Level 3 Requirements"
         trust_level_locked_tip: "trust level is locked, system will not promote or demote user"
-        trust_level_unlocked_tip: "trust level is unlocked, system will may promote or demote user"
+        trust_level_unlocked_tip: "trust level is unlocked, system may promote or demote user"
         lock_trust_level: "Lock Trust Level"
         unlock_trust_level: "Unlock Trust Level"
         silenced_count: "Silenced"

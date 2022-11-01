@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.19.6",
-    "@babel/standalone": "^7.19.6",
+    "@babel/standalone": "^7.20.0",
     "@discourse/itsatrap": "^2.0.10",
     "@discourse/backburner.js": "^2.7.1-0",
     "@ember/jquery": "^2.0.0",
@@ -72,7 +72,7 @@
     "eslint-plugin-qunit": "^6.2.0",
     "html-entities": "^2.3.3",
     "js-yaml": "^4.1.0",
-    "jsdom": "^20.0.1",
+    "jsdom": "^20.0.2",
     "loader.js": "^4.7.0",
     "markdown-it": "^13.0.1",
     "message-bus-client": "^4.2.0",

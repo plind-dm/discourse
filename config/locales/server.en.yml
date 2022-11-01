@@ -538,7 +538,7 @@ en:
 
       It’s easier for everyone to read topics that have fewer in-depth replies versus lots of small, individual replies.
 
-    dominating_topic: You’ve posted more than %{percent}% of the replies here, is there anyone else you would like to hear from?
+    dominating_topic: You’ve posted more than %{percent}% of the replies here; may we suggest you give other people an opportunity to chime in?
 
     get_a_room: You’ve replied to @%{reply_username} %{count} times, did you know you could send them a personal message instead?
 
@@ -826,7 +826,7 @@ en:
         other: "almost %{count} years ago"
 
   password_reset:
-    no_token: "Sorry, that password change link is too old. Select the Log In button and use 'I forgot my password' to get a new link."
+    no_token: 'Oops! The link you used no longer works. You can <a href="%{base_url}/login">Log In</a> now. If you forgot your password, you can <a href="%{base_url}/password-reset">request a link</a> to reset it.'
     choose_new: "Choose a new password"
     choose: "Choose a password"
     update: "Update Password"
@@ -4133,7 +4133,7 @@ en:
     png_to_jpg_conversion_failure_message: "An error happened when converting from PNG to JPG."
     optimize_failure_message: "An error occurred while optimizing the uploaded image."
     download_failure: "Downloading the file from the external provider failed."
-    size_mismatch_failure: "The size of the file uploaded to S3 did not match the external upload stub's intended size. %{additional_detail}"
+    size_mismatch_failure: "The size of the file uploaded to S3 did not match the external upload's intended size. %{additional_detail}"
     create_multipart_failure: "Failed to create multipart upload in the external store."
     abort_multipart_failure: "Failed to abort multipart upload in the external store."
     complete_multipart_failure: "Failed to complete multipart upload in the external store."
