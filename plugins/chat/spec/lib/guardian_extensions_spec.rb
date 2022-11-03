@@ -299,8 +299,18 @@ RSpec.describe Chat::GuardianExtensions do
       end
 
       context "when category has a channel" do
-        it "does not allow to delete the category" do
-          expect(staff_guardian).not_to be_able_to_delete_category(category)
+        context "when channel has no messages" do
+          it "allows to delete the category" do
+            expect(staff_guardian).to be_able_to_delete_category(category)
+          end
+        end
+
+        context "when channel has messages" do
+          let!(:message) { Fabricate(:chat_message, chat_channel: channel) }
+
+          it "does not allow to delete the category" do
+            expect(staff_guardian).not_to be_able_to_delete_category(category)
+          end
         end
       end
     end
