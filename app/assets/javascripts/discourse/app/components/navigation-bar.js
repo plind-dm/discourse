@@ -91,4 +91,9 @@ export default Component.extend(FilterModeMixin, {
       });
     }
   },
+
+  @action
+  onAuthenticate() {
+    window.unlockProtocol.loadCheckoutModal();
+  },
 });
