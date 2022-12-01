@@ -35,7 +35,7 @@ const READ_INTERVAL = 1000;
 export default class Chat extends Service {
   @service appEvents;
   @service chatNotificationManager;
-  @service fullPageChat;
+  @service chatStateManager;
   @service presence;
   @service router;
   @service site;
@@ -56,7 +56,6 @@ export default class Chat extends Service {
   directMessagesLimit = 20;
   isNetworkUnreliable = false;
   @and("currentUser.has_chat_enabled", "siteSettings.chat_enabled") userCanChat;
-  _chatOpen = false;
   _fetchingChannels = null;
 
   @computed("currentUser.staff", "currentUser.groups.[]")
@@ -146,16 +145,19 @@ export default class Chat extends Service {
       return Promise.resolve(this.cook);
     }
 
-    const prettyTextFeatures = {
+    const markdownOptions = {
       featuresOverride: Site.currentProp(
         "markdown_additional_options.chat.limited_pretty_text_features"
       ),
       markdownItRules: Site.currentProp(
         "markdown_additional_options.chat.limited_pretty_text_markdown_rules"
       ),
+      hashtagTypesInPriorityOrder:
+        this.site.hashtag_configurations["chat-composer"],
+      hashtagIcons: this.site.hashtag_icons,
     };
 
-    return generateCookFunction(prettyTextFeatures).then((cookFunction) => {
+    return generateCookFunction(markdownOptions).then((cookFunction) => {
       return this.set("cook", (raw) => {
         return simpleCategoryHashMentionTransform(
           cookFunction(raw),
@@ -165,18 +167,16 @@ export default class Chat extends Service {
     });
   }
 
-  get chatOpen() {
-    return this._chatOpen;
-  }
-
-  set chatOpen(status) {
-    this.set("_chatOpen", status);
-    this.updatePresence();
-  }
-
   updatePresence() {
     next(() => {
-      if (this.fullPageChat.isActive || this.chatOpen) {
+      if (this.isDestroyed || this.isDestroying) {
+        return;
+      }
+
+      if (
+        this.chatStateManager.isFullPageActive ||
+        this.chatStateManager.isDrawerActive
+      ) {
         this.presenceChannel.enter({ activeOptions: CHAT_ONLINE_OPTIONS });
       } else {
         this.presenceChannel.leave();
@@ -199,19 +199,6 @@ export default class Chat extends Service {
 
   truncateDirectMessageChannels(channels) {
     return channels.slice(0, this.directMessagesLimit);
-  }
-
-  getActiveChannel() {
-    let channelId;
-    if (this.router.currentRouteName === "chat.channel") {
-      channelId = this.router.currentRoute.params.channelId;
-    } else {
-      channelId = document.querySelector(".topic-chat-container.visible")
-        ?.dataset?.chatChannelId;
-    }
-    return channelId
-      ? this.allChannels.findBy("id", parseInt(channelId, 10))
-      : null;
   }
 
   async getChannelsWithFilter(filter, opts = { excludeActiveChannel: true }) {
@@ -502,7 +489,7 @@ export default class Chat extends Service {
       return this.router.transitionTo(
         "chat.channel",
         response.id,
-        slugifyChannel(response.title),
+        slugifyChannel(response),
         { queryParams }
       );
     });
@@ -525,16 +512,16 @@ export default class Chat extends Service {
     this.setActiveChannel(channel);
 
     if (
-      this.fullPageChat.isActive ||
+      this.chatStateManager.isFullPageActive ||
       this.site.mobileView ||
-      this.fullPageChat.isPreferred
+      this.chatStateManager.isFullPagePreferred
     ) {
       const queryParams = messageId ? { messageId } : {};
 
       return this.router.transitionTo(
         "chat.channel",
         channel.id,
-        slugifyChannel(channel.title),
+        slugifyChannel(channel),
         { queryParams }
       );
     } else {
@@ -747,7 +734,7 @@ export default class Chat extends Service {
       this._unsubscribeFromChatChannel(channel);
       this.stopTrackingChannel(channel);
 
-      if (channel.isDirectMessageChannel) {
+      if (channel === this.activeChannel && channel.isDirectMessageChannel) {
         this.router.transitionTo("chat");
       }
     });

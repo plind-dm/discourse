@@ -4,10 +4,8 @@ import {
   acceptance,
   exists,
   loggedInUser,
-  query,
-  visible,
 } from "discourse/tests/helpers/qunit-helpers";
-import { click, settled, visit } from "@ember/test-helpers";
+import { click, visit } from "@ember/test-helpers";
 import {
   chatChannels,
   directMessageChannels,
@@ -82,20 +80,16 @@ acceptance("Discourse Chat - User card test", function (needs) {
   });
 
   test("user card has chat button that opens the correct channel", async function (assert) {
-    this.chatService.set("sidebarActive", false);
-    this.chatService.set("chatWindowFullPage", false);
-    await visit("/latest");
-    this.appEvents.trigger("chat:toggle-open");
-    await settled();
-
-    await click(".topic-chat-drawer-header__return-to-channels-btn");
+    await visit("/");
+    await click(".header-dropdown-toggle.open-chat");
     await click(".chat-channel-row.chat-channel-9");
     await click("[data-user-card='hawk']");
+
     assert.ok(exists(".user-card-chat-btn"));
 
     await click(".user-card-chat-btn");
-    assert.ok(visible(".topic-chat-float-container"), "chat float is open");
-    assert.ok(query(".topic-chat-container").classList.contains("channel-75"));
+
+    assert.ok(exists(`.chat-drawer.is-expanded[data-chat-channel-id="75"]`));
   });
 });
 

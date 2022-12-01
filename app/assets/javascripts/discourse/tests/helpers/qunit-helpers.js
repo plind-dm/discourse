@@ -76,6 +76,7 @@ import { resetNotificationTypeRenderers } from "discourse/lib/notification-types
 import { resetUserMenuTabs } from "discourse/lib/user-menu/tab";
 import { reset as resetLinkLookup } from "discourse/lib/link-lookup";
 import { resetModelTransformers } from "discourse/lib/model-transformers";
+import { cleanupTemporaryModuleRegistrations } from "./temporary-module-helper";
 
 export function currentUser() {
   return User.create(sessionFixtures["/session/current.json"].current_user);
@@ -207,6 +208,7 @@ export function testCleanup(container, app) {
   resetUserMenuTabs();
   resetLinkLookup();
   resetModelTransformers();
+  cleanupTemporaryModuleRegistrations();
 }
 
 export function discourseModule(name, options) {
@@ -275,7 +277,11 @@ export function acceptance(name, optionsOrCallback) {
   } else if (typeof optionsOrCallback === "object") {
     deprecated(
       `${name}: The second parameter to \`acceptance\` should be a function that encloses your tests.`,
-      { since: "2.6.0", dropFrom: "2.9.0.beta1" }
+      {
+        since: "2.6.0",
+        dropFrom: "2.9.0.beta1",
+        id: "discourse.qunit.acceptance-function",
+      }
     );
     options = optionsOrCallback;
   }
@@ -407,6 +413,7 @@ QUnit.assert.not = function (actual, message) {
   deprecated("assert.not() is deprecated. Use assert.notOk() instead.", {
     since: "2.9.0.beta1",
     dropFrom: "2.10.0.beta1",
+    id: "discourse.qunit.assert-not",
   });
 
   this.pushResult({

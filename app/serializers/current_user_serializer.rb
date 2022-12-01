@@ -46,6 +46,7 @@ class CurrentUserSerializer < BasicUserSerializer
              :is_anonymous,
              :reviewable_count,
              :unseen_reviewable_count,
+             :new_personal_messages_notifications_count,
              :read_faq?,
              :automatically_unpin_topics,
              :mailing_list_mode,
@@ -170,7 +171,7 @@ class CurrentUserSerializer < BasicUserSerializer
   end
 
   def can_send_private_messages
-    scope.can_send_private_message?(Discourse.system_user)
+    scope.can_send_private_messages?
   end
 
   def can_edit
@@ -293,7 +294,7 @@ class CurrentUserSerializer < BasicUserSerializer
   end
 
   def include_seen_popups?
-    SiteSetting.enable_onboarding_popups
+    SiteSetting.enable_user_tips
   end
 
   def include_primary_group_id?
@@ -323,7 +324,7 @@ class CurrentUserSerializer < BasicUserSerializer
   end
 
   def second_factor_enabled
-    object.totp_enabled? || object.security_keys_enabled?
+    object.totp_enabled? || object.security_keys_enabled? || object.backup_codes_enabled?
   end
 
   def featured_topic
@@ -354,6 +355,10 @@ class CurrentUserSerializer < BasicUserSerializer
     UserStatusSerializer.new(object.user_status, root: false)
   end
 
+  def unseen_reviewable_count
+    Reviewable.unseen_reviewable_count(object)
+  end
+
   def redesigned_user_menu_enabled
     object.redesigned_user_menu_enabled?
   end
@@ -371,6 +376,10 @@ class CurrentUserSerializer < BasicUserSerializer
   end
 
   def include_unseen_reviewable_count?
+    redesigned_user_menu_enabled
+  end
+
+  def include_new_personal_messages_notifications_count?
     redesigned_user_menu_enabled
   end
 

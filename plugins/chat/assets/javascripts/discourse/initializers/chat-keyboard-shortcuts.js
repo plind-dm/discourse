@@ -14,7 +14,9 @@ export default {
       return;
     }
 
+    const router = container.lookup("service:router");
     const appEvents = container.lookup("service:app-events");
+    const chatStateManager = container.lookup("service:chat-state-manager");
     const openChannelSelector = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -47,12 +49,6 @@ export default {
       }
       return true;
     };
-    const isDrawerExpanded = () => {
-      return document.querySelector(".topic-chat-float-container:not(.hidden)")
-        ? true
-        : false;
-    };
-
     const modifyComposerSelection = (event, type) => {
       if (!isChatComposer(event.target)) {
         return;
@@ -77,11 +73,13 @@ export default {
       }
       event.preventDefault();
       event.stopPropagation();
-      appEvents.trigger("chat:toggle-open", event);
+
+      chatStateManager.prefersDrawer();
+      router.transitionTo(chatStateManager.lastKnownChatURL || "chat");
     };
 
     const closeChatDrawer = (event) => {
-      if (!isDrawerExpanded()) {
+      if (!chatStateManager.isDrawerActive) {
         return;
       }
 

@@ -494,6 +494,7 @@ Discourse::Application.routes.draw do
       put "#{root_path}/:username/preferences/primary-email" => "users#update_primary_email", format: :json, constraints: { username: RouteFormat.username }
       delete "#{root_path}/:username/preferences/email" => "users#destroy_email", constraints: { username: RouteFormat.username }
       get "#{root_path}/:username/preferences/notifications" => "users#preferences", constraints: { username: RouteFormat.username }
+      get "#{root_path}/:username/preferences/tracking" => "users#preferences", constraints: { username: RouteFormat.username }
       get "#{root_path}/:username/preferences/categories" => "users#preferences", constraints: { username: RouteFormat.username }
       get "#{root_path}/:username/preferences/users" => "users#preferences", constraints: { username: RouteFormat.username }
       get "#{root_path}/:username/preferences/tags" => "users#preferences", constraints: { username: RouteFormat.username }
@@ -773,7 +774,7 @@ Discourse::Application.routes.draw do
       get "/" => "list#category_default", as: "category_default"
     end
 
-    get "hashtags" => "hashtags#show"
+    get "hashtags" => "hashtags#lookup"
     get "hashtags/search" => "hashtags#search"
 
     TopTopic.periods.each do |period|
@@ -838,8 +839,8 @@ Discourse::Application.routes.draw do
     get 'embed/count' => 'embed#count'
     get 'embed/info' => 'embed#info'
 
-    get "new-topic" => "list#latest"
-    get "new-message" => "list#latest"
+    get "new-topic" => "new_topic#index"
+    get "new-message" => "new_topic#index"
 
     # Topic routes
     get "t/id_for/:slug" => "topics#id_for_slug"
@@ -1036,6 +1037,7 @@ Discourse::Application.routes.draw do
     post "/presence/update" => "presence#update"
     get "/presence/get" => "presence#get"
 
+    get "user-status" => "user_status#get"
     put "user-status" => "user_status#set"
     delete "user-status" => "user_status#clear"
 

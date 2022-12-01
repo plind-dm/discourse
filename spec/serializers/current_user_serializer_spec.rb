@@ -102,6 +102,16 @@ RSpec.describe CurrentUserSerializer do
         expect(json[:second_factor_enabled]).to eq(true)
       end
     end
+
+    context "when backup codes enabled" do
+      before do
+        User.any_instance.stubs(:backup_codes_enabled?).returns(true)
+      end
+
+      it "is true" do
+        expect(json[:second_factor_enabled]).to eq(true)
+      end
+    end
   end
 
   describe "#groups" do
@@ -377,6 +387,20 @@ RSpec.describe CurrentUserSerializer do
 
       user.user_option.update!(sidebar_list_destination: "unread_new")
       expect(serializer.as_json[:sidebar_list_destination]).to eq("unread_new")
+    end
+  end
+
+  describe "#new_personal_messages_notifications_count" do
+    fab!(:notification) { Fabricate(:notification, user: user, read: false, notification_type: Notification.types[:private_message]) }
+
+    it "isn't included when enable_experimental_sidebar_hamburger is disabled" do
+      SiteSetting.enable_experimental_sidebar_hamburger = false
+      expect(serializer.as_json[:new_personal_messages_notifications_count]).to be_nil
+    end
+
+    it "is included when enable_experimental_sidebar_hamburger is enabled" do
+      SiteSetting.enable_experimental_sidebar_hamburger = true
+      expect(serializer.as_json[:new_personal_messages_notifications_count]).to eq(1)
     end
   end
 

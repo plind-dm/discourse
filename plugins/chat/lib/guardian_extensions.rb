@@ -95,6 +95,7 @@ module Chat::GuardianExtensions
 
   def can_flag_chat_messages?
     return false if @user.silenced?
+    return true if @user.staff?
 
     @user.in_any_groups?(SiteSetting.chat_message_flag_allowed_groups_map)
   end
@@ -177,6 +178,6 @@ module Chat::GuardianExtensions
   end
 
   def can_delete_category?(category)
-    super && !category.category_channel
+    super && category.deletable_for_chat?
   end
 end
