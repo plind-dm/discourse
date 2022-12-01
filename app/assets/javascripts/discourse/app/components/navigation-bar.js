@@ -3,7 +3,6 @@ import Component from "@ember/component";
 import { action } from "@ember/object";
 import DiscourseURL from "discourse/lib/url";
 import loadScript from "discourse/lib/load-script";
-import { withPluginApi } from "discourse/lib/plugin-api";
 import FilterModeMixin from "discourse/mixins/filter-mode";
 import { next } from "@ember/runloop";
 
@@ -100,6 +99,6 @@ export default Component.extend(FilterModeMixin, {
   onAuthenticate() {
     loadScript(UNLOCK_URL).then(() => {
       window.unlockProtocol.loadCheckoutModal();
-    })
+    });
   },
 });
