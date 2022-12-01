@@ -11,11 +11,6 @@ RSpec.describe Chat::GuardianExtensions do
   let(:guardian) { Guardian.new(user) }
   let(:staff_guardian) { Guardian.new(staff) }
 
-  before do
-    SiteSetting.chat_allowed_groups = chat_group.id
-    chat_group.add(user)
-  end
-
   it "cannot chat if the user is not in the Chat.allowed_group_ids" do
     SiteSetting.chat_allowed_groups = ""
     expect(guardian.can_chat?(user)).to eq(false)
@@ -24,6 +19,22 @@ RSpec.describe Chat::GuardianExtensions do
   it "staff can always chat regardless of chat_allowed_grups" do
     SiteSetting.chat_allowed_groups = ""
     expect(guardian.can_chat?(staff)).to eq(true)
+  end
+
+  it "allows TL1 to chat by default and by extension higher trust levels" do
+    Group.refresh_automatic_groups!
+    expect(guardian.can_chat?(user)).to eq(true)
+    user.update!(trust_level: TrustLevel[3])
+    Group.refresh_automatic_groups!
+    expect(guardian.can_chat?(user)).to eq(true)
+  end
+
+  it "allows user in specific group to chat" do
+    SiteSetting.chat_allowed_groups = chat_group.id
+    expect(guardian.can_chat?(user)).to eq(false)
+    chat_group.add(user)
+    user.reload
+    expect(guardian.can_chat?(user)).to eq(true)
   end
 
   describe "chat channel" do
@@ -128,6 +139,23 @@ RSpec.describe Chat::GuardianExtensions do
           it "returns true" do
             expect(guardian).to be_able_to_flag_in_chat_channel(private_channel)
           end
+        end
+      end
+    end
+
+    describe "#can_flag_chat_message?" do
+      let!(:message) { Fabricate(:chat_message, chat_channel: channel) }
+      before { SiteSetting.chat_message_flag_allowed_groups = "" }
+
+      context "when user isn't staff" do
+        it "returns false" do
+          expect(guardian.can_flag_chat_message?(message)).to eq(false)
+        end
+      end
+
+      context "when user is staff" do
+        it "returns true" do
+          expect(staff_guardian.can_flag_chat_message?(message)).to eq(true)
         end
       end
     end
@@ -287,20 +315,61 @@ RSpec.describe Chat::GuardianExtensions do
 
       let(:category) { channel.chatable }
 
-      context "when category has no channel" do
-        before do
-          category.category_channel.destroy
-          category.reload
+      context "when user is staff" do
+        context "when category has no channel" do
+          before do
+            category.category_channel.destroy
+            category.reload
+          end
+
+          it "allows to delete the category" do
+            expect(staff_guardian).to be_able_to_delete_category(category)
+          end
         end
 
-        it "allows to delete the category" do
-          expect(staff_guardian).to be_able_to_delete_category(category)
+        context "when category has a channel" do
+          context "when channel has no messages" do
+            it "allows to delete the category" do
+              expect(staff_guardian).to be_able_to_delete_category(category)
+            end
+          end
+
+          context "when channel has messages" do
+            let!(:message) { Fabricate(:chat_message, chat_channel: channel) }
+
+            it "does not allow to delete the category" do
+              expect(staff_guardian).not_to be_able_to_delete_category(category)
+            end
+          end
         end
       end
 
-      context "when category has a channel" do
-        it "does not allow to delete the category" do
-          expect(staff_guardian).not_to be_able_to_delete_category(category)
+      context "when user is not staff" do
+        context "when category has no channel" do
+          before do
+            category.category_channel.destroy
+            category.reload
+          end
+
+          it "does not allow to delete the category" do
+            expect(guardian).not_to be_able_to_delete_category(category)
+          end
+        end
+
+        context "when category has a channel" do
+          context "when channel has no messages" do
+            it "does not allow to delete the category" do
+              expect(guardian).not_to be_able_to_delete_category(category)
+            end
+          end
+
+          context "when channel has messages" do
+            let!(:message) { Fabricate(:chat_message, chat_channel: channel) }
+
+            it "does not allow to delete the category" do
+              expect(guardian).not_to be_able_to_delete_category(category)
+            end
+          end
         end
       end
     end

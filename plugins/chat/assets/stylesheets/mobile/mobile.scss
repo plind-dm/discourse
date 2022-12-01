@@ -1,5 +1,5 @@
 :root {
-  --chat-mobile-avatar-size: 38px;
+  --channel-list-avatar-size: 38px;
 }
 
 .chat-message {
@@ -43,6 +43,15 @@ body.has-full-page-chat {
   overflow-x: hidden;
   width: 100%;
 
+  .btn:active,
+  .btn:hover {
+    background: var(--secondary-very-high);
+
+    .d-icon {
+      color: var(--primary-medium);
+    }
+  }
+
   .chat-live-pane {
     border-radius: 0;
     padding: 0;
@@ -54,7 +63,9 @@ body.has-full-page-chat {
 
   .chat-full-page-header {
     background-color: var(--secondary);
-    padding: 0.5em 10px;
+    padding: 0 10px;
+    height: 50px;
+    min-height: 50px;
   }
 
   .chat-messages-scroll {
@@ -62,28 +73,22 @@ body.has-full-page-chat {
   }
 }
 
-.channels-list .chat-channel-row {
-  padding: 0 0.5em 0 0.25em;
+.channels-list {
+  .chat-channel-row {
+    .category-chat-private .d-icon {
+      background-color: var(--secondary);
+    }
 
-  .category-chat-private .d-icon {
-    background-color: var(--secondary);
-  }
-
-  .chat-channel-unread-indicator {
-    width: 6px;
-    height: 6px;
-    left: 5px;
-    top: calc(50% - 3px);
+    .chat-channel-metadata {
+      .chat-channel-unread-indicator {
+        font-size: var(--font-down-2);
+      }
+    }
   }
 }
 
 .sidebar-container .channels-list .chat-channel-divider {
   padding-left: 1em;
-}
-
-.channels-list .chat-channel-divider {
-  padding: 0.25em 0.5em 0.25em;
-  margin-top: 1em;
 }
 
 .sidebar-container .channels-list .chat-channel-row {

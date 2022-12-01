@@ -8,7 +8,7 @@ export default createWidget("header-chat-link", {
   chat: null,
   tagName: "li.header-dropdown-toggle.open-chat",
   title: "chat.title",
-  services: ["chat", "router", "fullPageChat"],
+  services: ["chat", "router", "chatStateManager"],
 
   html() {
     if (!this.chat.userCanChat) {
@@ -40,7 +40,10 @@ export default createWidget("header-chat-link", {
   chatLinkHtml(indicatorNode) {
     return h(
       `a.icon${
-        this.fullPageChat.isActive || this.chat.chatOpen ? ".active" : ""
+        this.chatStateManager.isFullPageActive ||
+        this.chatStateManager.isDrawerActive
+          ? ".active"
+          : ""
       }`,
       { attributes: { tabindex: 0 } },
       [iconNode("comment"), indicatorNode].filter(Boolean)
@@ -61,19 +64,20 @@ export default createWidget("header-chat-link", {
   },
 
   click() {
-    if (this.fullPageChat.isActive && !this.site.mobileView) {
+    if (this.chatStateManager.isFullPageActive && this.site.desktopView) {
       return;
     }
 
-    if (
-      this.chat.sidebarActive ||
-      this.site.mobileView ||
-      this.fullPageChat.isPreferred
-    ) {
-      this.fullPageChat.isPreferred = true;
+    if (this.chatStateManager.isFullPageActive && this.site.mobileView) {
+      return this.router.transitionTo("chat");
+    }
+
+    if (this.chatStateManager.isDrawerActive) {
       return this.router.transitionTo("chat");
     } else {
-      this.appEvents.trigger("chat:toggle-open");
+      return this.router.transitionTo(
+        this.chatStateManager.lastKnownChatURL || "chat"
+      );
     }
   },
 

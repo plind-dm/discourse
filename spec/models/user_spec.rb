@@ -53,7 +53,20 @@ RSpec.describe User do
           tag.id
         )
 
-        user = Fabricate(:admin)
+        admin = Fabricate(:admin)
+
+        expect(SidebarSectionLink.where(linkable_type: 'Category', user_id: admin.id).pluck(:linkable_id)).to contain_exactly(
+          category.id,
+          secured_category.id
+        )
+
+        expect(SidebarSectionLink.where(linkable_type: 'Tag', user_id: admin.id).pluck(:linkable_id)).to contain_exactly(
+          tag.id,
+          hidden_tag.id
+        )
+
+        # A user promoted to admin should get secured sidebar records
+        user.update(admin: true)
 
         expect(SidebarSectionLink.where(linkable_type: 'Category', user_id: user.id).pluck(:linkable_id)).to contain_exactly(
           category.id,
@@ -1917,6 +1930,7 @@ RSpec.describe User do
       SiteSetting.default_other_dynamic_favicon = true
       SiteSetting.default_other_skip_new_user_tips = true
 
+      SiteSetting.default_hide_profile_and_presence = true
       SiteSetting.default_topics_automatic_unpin = false
 
       SiteSetting.default_categories_watching = category0.id.to_s
@@ -1937,6 +1951,7 @@ RSpec.describe User do
       expect(options.enable_quoting).to eq(false)
       expect(options.dynamic_favicon).to eq(true)
       expect(options.skip_new_user_tips).to eq(true)
+      expect(options.hide_profile_and_presence).to eq(true)
       expect(options.automatically_unpin_topics).to eq(false)
       expect(options.new_topic_duration_minutes).to eq(-1)
       expect(options.auto_track_topics_after_msecs).to eq(0)
@@ -2161,6 +2176,7 @@ RSpec.describe User do
         user.update!(admin: true)
         Fabricate(:notification, user: user, notification_type: 1)
         Fabricate(:notification, notification_type: 15, high_priority: true, read: false, user: user)
+        Fabricate(:notification, user: user, notification_type: Notification.types[:private_message], read: false)
 
         messages = MessageBus.track_publish("/notification/#{user.id}") do
           user.publish_notifications_state
@@ -2170,8 +2186,9 @@ RSpec.describe User do
 
         message = messages.first
 
-        expect(message.data[:all_unread_notifications_count]).to eq(2)
-        expect(message.data[:grouped_unread_notifications]).to eq({ 1 => 1, 15 => 1 })
+        expect(message.data[:all_unread_notifications_count]).to eq(3)
+        expect(message.data[:grouped_unread_notifications]).to eq({ 1 => 1, 15 => 1, Notification.types[:private_message] => 1 })
+        expect(message.data[:new_personal_messages_notifications_count]).to eq(1)
       end
     end
   end
@@ -2957,33 +2974,6 @@ RSpec.describe User do
     end
   end
 
-  describe "#unseen_reviewable_count" do
-    fab!(:admin_reviewable) { Fabricate(:reviewable, reviewable_by_moderator: false) }
-    fab!(:mod_reviewable) { Fabricate(:reviewable, reviewable_by_moderator: true) }
-    fab!(:group_reviewable) { Fabricate(:reviewable, reviewable_by_moderator: false, reviewable_by_group: group) }
-
-    it "doesn't include reviewables that can't be seen by the user" do
-      SiteSetting.enable_category_group_moderation = true
-      expect(user.unseen_reviewable_count).to eq(0)
-      user.groups << group
-      user.save!
-      expect(user.unseen_reviewable_count).to eq(1)
-      user.update!(moderator: true)
-      expect(user.unseen_reviewable_count).to eq(2)
-      user.update!(admin: true)
-      expect(user.unseen_reviewable_count).to eq(3)
-    end
-
-    it "returns count of unseen reviewables" do
-      user.update!(admin: true)
-      expect(user.unseen_reviewable_count).to eq(3)
-      user.update!(last_seen_reviewable_id: mod_reviewable.id)
-      expect(user.unseen_reviewable_count).to eq(1)
-      user.update!(last_seen_reviewable_id: group_reviewable.id)
-      expect(user.unseen_reviewable_count).to eq(0)
-    end
-  end
-
   describe "#bump_last_seen_reviewable!" do
     it "doesn't error if there are no reviewables" do
       Reviewable.destroy_all
@@ -3046,7 +3036,7 @@ RSpec.describe User do
       expect(messages.first).to have_attributes(
         channel: "/reviewable_counts/#{user.id}",
         user_ids: [user.id],
-        data: { unseen_reviewable_count: 0 }
+        data: { unseen_reviewable_count: 0, reviewable_count: 1 }
       )
     end
   end
@@ -3083,6 +3073,71 @@ RSpec.describe User do
       user.update!(admin: true)
 
       expect(user.visible_sidebar_tags).to contain_exactly(tag, hidden_tag)
+    end
+  end
+
+  describe '#secure_category_ids' do
+    fab!(:admin) { Fabricate(:admin) }
+    fab!(:group) { Fabricate(:group) }
+    fab!(:private_category) { Fabricate(:private_category, group: group) }
+
+    it 'allows admin to see all secure categories' do
+      expect(admin.secure_category_ids).to include(private_category.id)
+    end
+
+    context 'when SiteSetting.suppress_secured_categories_from_admin is true' do
+      it 'hides secure categories from admins' do
+        SiteSetting.suppress_secured_categories_from_admin = true
+        expect(admin.secure_category_ids).not_to include(private_category.id)
+      end
+    end
+  end
+
+  describe '#new_personal_messages_notifications_count' do
+    it "returns count of new and unread private_message notifications of the user" do
+      another_user = Fabricate(:user)
+
+      Fabricate(:notification, user: user, read: false)
+
+      last_seen_id = Fabricate(
+        :notification,
+        user: user,
+        read: false,
+        notification_type: Notification.types[:private_message]
+      ).id
+
+      expect(user.new_personal_messages_notifications_count).to eq(1)
+
+      Fabricate(
+        :notification,
+        user: user,
+        read: false,
+        notification_type: Notification.types[:private_message]
+      )
+
+      Fabricate(
+        :notification,
+        user: another_user,
+        read: false,
+        notification_type: Notification.types[:private_message]
+      )
+
+      Fabricate(
+        :notification,
+        user: user,
+        read: true,
+        notification_type: Notification.types[:private_message]
+      )
+
+      Fabricate(
+        :notification,
+        user: user,
+        read: false,
+        notification_type: Notification.types[:replied]
+      )
+
+      user.update!(seen_notification_id: last_seen_id)
+      expect(user.new_personal_messages_notifications_count).to eq(1)
     end
   end
 end

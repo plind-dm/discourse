@@ -260,6 +260,7 @@ pl_PL:
       invalid_access: "Nie masz uprawnień do przeglądania żądanego zasobu."
     requires_groups: "Zaproszenie nie zostało zapisane, ponieważ podany temat jest niedostępny. Dodaj jedną z następujących grup: %{groups}."
     domain_not_allowed: "Twój adres e-mail nie może zostać użyty do zrealizowania tego zaproszenia."
+    existing_user_success: "Zaproszenie zostało pomyślnie zrealizowane"
   bulk_invite:
     file_should_be_csv: "Wgrywany plik powinien być formatu csv."
     max_rows: "Wysłano %{max_bulk_invites} pierwszych zaproszeń. Sprobuj podzielić plik na mniejsze części."
@@ -642,6 +643,7 @@ pl_PL:
       <<: *errors
   uncategorized_category_name: "Bez kategorii"
   general_category_name: "Ogólne"
+  general_category_description: "Utwórz tutaj tematy, które nie pasują do żadnej innej istniejącej kategorii."
   meta_category_name: "Dyskusje o serwisie"
   meta_category_description: "Dyskusje o tej stronie, jej organizacji, tym jak działa i jak możemy ją usprawnić."
   staff_category_name: "Zespół"
@@ -865,7 +867,6 @@ pl_PL:
     success: "Twoje hasło zostało pomyślnie zmienione, zalogowano."
     success_unapproved: "Zmieniłeś(-a) swoje hasło."
   email_login:
-    invalid_token: "Przepraszamy, ten link do logowania jest zbyt stary. Kliknij przycisk \"Zaloguj\" i użyj opcji \"Zapomniałem hasła\", aby otrzymać nowy link."
     title: "Logowanie e-mailem"
   user_auth_tokens:
     browser:
@@ -1185,6 +1186,11 @@ pl_PL:
         editor: Edytor
         author: Autor
         edit_reason: Powód
+    consolidated_api_requests:
+      xaxis:
+        api: "API"
+        user_api: "API użytkownika"
+      yaxis: "Dzień"
     dau_by_mau:
       title: "DAU / MAU"
       xaxis: "Dzień"
@@ -1635,6 +1641,7 @@ pl_PL:
     post_menu: "Określ które elementy menu wpisu powinny być widoczne i w jakiej kolejności. Przykład like|edit|flag|delete|share|bookmark|reply"
     post_menu_hidden_items: "Elementy w menu, które w menu wpisu będą ukryte, chyba że kliknięty zostanie przycisk rozwijania."
     share_links: "Określ które elementy menu udostępniania powinny być widoczne i w jakiej kolejności. "
+    allow_username_in_share_links: "Zezwalaj na umieszczanie nazw użytkowników w linkach do udostępniania. Jest to przydatne, aby nagradzać odznaki na podstawie unikalnych odwiedzających."
     site_contact_username: "Nazwa użytkownika, spod której wysyłane będą automatyczne wiadomości. Jeśli pusta, użyte będzie domyślne konto System."
     site_contact_group_name: "Prawidłowa nazwa grupy, do której zostaną zaproszone wszystkie automatyczne wiadomości."
     send_welcome_message: "Wyślij wszystkim nowym użytkownikom powitalną wiadomość z krótkim przewodnikiem."
@@ -1657,6 +1664,7 @@ pl_PL:
     enable_badges: "Włącz system odznak"
     max_favorite_badges: "Maksymalna liczba odznak, które użytkownik może wybrać"
     enable_whispers: "Pozwalaj administracji na prywatną rozmowę w tematach."
+    whispers_allowed_groups: "Zezwalaj na prywatną komunikację w ramach tematów członkom określonych grup."
     allow_index_in_robots_txt: "W pliku robots.txt określ, że ta witryna może być indeksowana przez wyszukiwarki internetowe. W wyjątkowych przypadkach możesz trwale <a href='%{base_path}/admin/customize/robots'>zastąpić plik robots.txt</a>."
     blocked_email_domains: "Lista domen poczty e-mail rozdzielonych pionową kreską, z których użytkownicy nie mogą rejestrować kont. Przykład: mailinator.com|trashmail.net"
     allowed_email_domains: "Lista rozdzielonych pionową kreską domen e-mail, z których użytkownicy MUSZĄ się rejestrować. UWAGA: Użytkownicy z domenami e-mail innymi niż wypisane tutaj nie będą mogli się zarejestrować!"
@@ -1707,6 +1715,7 @@ pl_PL:
     google_oauth2_client_secret: "Client Secret twojej aplikacji w Google"
     google_oauth2_prompt: "Opcjonalna lista wartości łańcuchowych rozdzielanych spacjami, która określa, czy serwer autoryzacji monituje użytkownika o ponowne uwierzytelnienie i zgodę. Możliwe wartości można znaleźć na <a href='https://developers.google.com/identity/protocols/OpenIDConnect#prompt' target='_blank'>https://developers.google.com/identity/protocols/OpenIDConnect#prompt</a> ."
     google_oauth2_hd: "Opcjonalna domena Google Apps Hosted, do której logowanie będzie ograniczone. Więcej informacji można znaleźć na <a href='https://developers.google.com/identity/protocols/OpenIDConnect#hd-param' target='_blank'>https://developers.google.com/identity/protocols/OpenIDConnect#hd-param</a>"
+    google_oauth2_hd_groups: "(eksperymentalne) Pobierz grupy dyskusyjne Google użytkowników w domenie hostowanej po uwierzytelnieniu. Pobrane grupy dyskusyjne Google mogą być używane do przyznawania automatycznego członkostwa w grupach Discourse (zobacz ustawienia grupy). Więcej informacji znajdziesz na https://meta.discourse.org/t/226850"
     enable_twitter_logins: "Włącz uwierzytelnianie przez Twittera, wymaga twitter_consumer_key i twitter_consumer_secret. Zobacz <a href='https://meta.discourse.org/t/13395' target='_blank'>Konfigurowanie logowania przez Twittera (i bogatych embedów) dla Discourse</a>."
     twitter_consumer_key: "Klucz klienta do uwierzytelnienia na Twitterze, zarejestrowany na <a href='https://developer.twitter.com/apps' target='_blank'>https://developer.twitter.com/apps</a>"
     twitter_consumer_secret: "Sekret klienta dotyczący uwierzytelniania na Twitterze, zarejestrowany na <a href='https://developer.twitter.com/apps' target='_blank'>stronie https://developer.twitter.com/apps</a>"
@@ -2011,7 +2020,7 @@ pl_PL:
     enable_user_directory: "Dostarcz katalog użytkowników do wyszukiwania"
     enable_group_directory: "Udostępnij katalog grup do przeglądania"
     enable_category_group_moderation: "Zezwalaj grupom na moderowanie treści w określonych kategoriach"
-    group_in_subject: "Ustaw %%{optional_pm} w temacie wiadomości e-mail z nazwą pierwszej grupy w prywatnej wiadomości, zobacz: <a href='https://meta.discourse.org/t/customize-subject-format-for-standard-emails/20801' target='_blank'>Dostosuj format tematu dla standardowych wiadomości e-mail</a>"
+    group_in_subject: "Ustaw %%{optional_pm} w temacie wiadomości e-mail z nazwą pierwszej grupy w prywatnej wiadomości, zobacz: <a href='https://meta.discourse.org/t/customize-specific-email-templates/88323' target='_blank'>Dostosuj format tematu dla standardowych wiadomości e-mail</a>"
     allow_anonymous_posting: "Zezwól użytkownikom na przechodzenie w tryb anonimowości."
     anonymous_posting_min_trust_level: "Minimalny poziom zaufania potrzebny by aktywować anonimowe wpisy"
     anonymous_account_duration_minutes: "Aby chronić anonimowość twórz nowe anonimowe konto co N minut dla każdego użytkownika. Przykład: jeśli ustawione na 600, dopóki nie minie 600 minut od ostatniego wpisu i użytkownik przełącza się na anon, zostanie utworzone nowe anonimowe konto."

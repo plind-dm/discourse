@@ -72,6 +72,23 @@ describe Chat::ChatMessageCreator do
       )
     end
 
+    it "errors when length is greater than `chat_maximum_message_length`" do
+      SiteSetting.chat_maximum_message_length = 100
+      creator =
+        Chat::ChatMessageCreator.create(
+          chat_channel: public_chat_channel,
+          user: user1,
+          content: "a really long and in depth message that is just too detailed" * 100,
+        )
+      expect(creator.failed?).to eq(true)
+      expect(creator.error.message).to match(
+        I18n.t(
+          "chat.errors.message_too_long",
+          { maximum: SiteSetting.chat_maximum_message_length },
+        ),
+      )
+    end
+
     it "allows message creation when length is less than `chat_minimum_message_length` when upload is present" do
       upload = Fabricate(:upload, user: user1)
       SiteSetting.chat_minimum_message_length = 10
@@ -93,6 +110,27 @@ describe Chat::ChatMessageCreator do
           content: "this is a message",
         )
       }.to change { ChatMessage.count }.by(1)
+    end
+
+    it "sets the last_editor_id to the user who created the message" do
+      message =
+        Chat::ChatMessageCreator.create(
+          chat_channel: public_chat_channel,
+          user: user1,
+          content: "this is a message",
+        ).chat_message
+      expect(message.last_editor_id).to eq(user1.id)
+    end
+
+    it "publishes a DiscourseEvent for new messages" do
+      events = DiscourseEvent.track_events {
+        Chat::ChatMessageCreator.create(
+          chat_channel: public_chat_channel,
+          user: user1,
+          content: "this is a message",
+        )
+      }
+      expect(events.map { _1[:event_name] }).to include(:chat_message_created)
     end
 
     it "creates mention notifications for public chat" do

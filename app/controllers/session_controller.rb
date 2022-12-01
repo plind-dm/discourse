@@ -352,7 +352,7 @@ class SessionController < ApplicationController
     else
       render json: {
         can_login: false,
-        error: I18n.t('email_login.invalid_token')
+        error: I18n.t('email_login.invalid_token', base_url: Discourse.base_url)
       }
     end
   end
@@ -383,7 +383,7 @@ class SessionController < ApplicationController
       end
     end
 
-    render json: { error: I18n.t('email_login.invalid_token') }
+    render json: { error: I18n.t('email_login.invalid_token', base_url: Discourse.base_url) }
   end
 
   def one_time_password
@@ -760,7 +760,7 @@ class SessionController < ApplicationController
     end
 
     if invite.redeemable?
-      if !invite.is_invite_link? && sso.email != invite.email
+      if invite.is_email_invite? && sso.email != invite.email
         raise Invite::ValidationFailed.new(I18n.t("invite.not_matching_email"))
       end
     elsif invite.expired?
