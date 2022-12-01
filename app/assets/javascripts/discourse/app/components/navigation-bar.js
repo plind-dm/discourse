@@ -2,8 +2,12 @@ import discourseComputed, { observes } from "discourse-common/utils/decorators";
 import Component from "@ember/component";
 import { action } from "@ember/object";
 import DiscourseURL from "discourse/lib/url";
+import loadScript from "discourse/lib/load-script";
+import { withPluginApi } from "discourse/lib/plugin-api";
 import FilterModeMixin from "discourse/mixins/filter-mode";
 import { next } from "@ember/runloop";
+
+const UNLOCK_URL = "https://unlock.radiant.capital/unlock.latest.min.js";
 
 export default Component.extend(FilterModeMixin, {
   tagName: "ul",
@@ -94,6 +98,8 @@ export default Component.extend(FilterModeMixin, {
 
   @action
   onAuthenticate() {
-    window.unlockProtocol.loadCheckoutModal();
+    loadScript(UNLOCK_URL).then(() => {
+      window.unlockProtocol.loadCheckoutModal();
+    })
   },
 });
