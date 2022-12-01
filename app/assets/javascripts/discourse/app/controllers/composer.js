@@ -67,6 +67,7 @@ async function loadDraft(store, opts = {}) {
 }
 
 const _popupMenuOptionsCallbacks = [];
+const _composerSaveErrorCallbacks = [];
 
 let _checkDraftPopup = !isTesting();
 
@@ -80,6 +81,14 @@ export function clearPopupMenuOptionsCallback() {
 
 export function addPopupMenuOptionsCallback(callback) {
   _popupMenuOptionsCallbacks.push(callback);
+}
+
+export function clearComposerSaveErrorCallback() {
+  _composerSaveErrorCallbacks.length = 0;
+}
+
+export function addComposerSaveErrorCallback(callback) {
+  _composerSaveErrorCallbacks.push(callback);
 }
 
 export default Controller.extend({
@@ -639,12 +648,21 @@ export default Controller.extend({
           const [linkWarn, linkInfo] = linkLookup.check(post, href);
 
           if (linkWarn && !this.get("isWhispering")) {
-            const body = I18n.t("composer.duplicate_link", {
-              domain: linkInfo.domain,
-              username: linkInfo.username,
-              post_url: topic.urlForPostNumber(linkInfo.post_number),
-              ago: shortDate(linkInfo.posted_at),
-            });
+            let body;
+            if (linkInfo.username === this.currentUser.username) {
+              body = I18n.t("composer.duplicate_link_same_user", {
+                domain: linkInfo.domain,
+                post_url: topic.urlForPostNumber(linkInfo.post_number),
+                ago: shortDate(linkInfo.posted_at),
+              });
+            } else {
+              body = I18n.t("composer.duplicate_link", {
+                domain: linkInfo.domain,
+                username: linkInfo.username,
+                post_url: topic.urlForPostNumber(linkInfo.post_number),
+                ago: shortDate(linkInfo.posted_at),
+              });
+            }
             this.appEvents.trigger("composer-messages:create", {
               extraClass: "custom-body",
               templateName: "education",
@@ -1039,9 +1057,20 @@ export default Controller.extend({
       .catch((error) => {
         composer.set("disableDrafts", false);
         if (error) {
-          this.appEvents.one("composer:will-open", () =>
-            this.dialog.alert(error)
-          );
+          this.appEvents.one("composer:will-open", () => {
+            if (
+              _composerSaveErrorCallbacks.length === 0 ||
+              !_composerSaveErrorCallbacks
+                .map((c) => {
+                  return c.call(this, error);
+                })
+                .some((i) => {
+                  return i;
+                })
+            ) {
+              this.dialog.alert(error);
+            }
+          });
         }
       });
 
@@ -1234,7 +1263,9 @@ export default Controller.extend({
 
     if (!this.model.targetRecipients) {
       if (opts.usernames) {
-        deprecated("`usernames` is deprecated, use `recipients` instead.");
+        deprecated("`usernames` is deprecated, use `recipients` instead.", {
+          id: "discourse.composer.usernames",
+        });
         this.model.set("targetRecipients", opts.usernames);
       } else if (opts.recipients) {
         this.model.set("targetRecipients", opts.recipients);

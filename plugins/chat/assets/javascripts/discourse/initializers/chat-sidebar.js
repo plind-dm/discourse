@@ -10,6 +10,7 @@ import { emojiUnescape } from "discourse/lib/text";
 import { decorateUsername } from "discourse/helpers/decorate-username-selector";
 import { until } from "discourse/lib/formatter";
 import { inject as service } from "@ember/service";
+import { computed } from "@ember/object";
 
 export default {
   name: "chat-sidebar",
@@ -33,16 +34,19 @@ export default {
               super(...arguments);
               this.channel = channel;
               this.chatService = chatService;
+            }
 
-              this.chatService.appEvents.on(
+            @bind
+            willDestroy() {
+              this.chatService.appEvents.off(
                 "chat:user-tracking-state-changed",
                 this._refreshTrackingState
               );
             }
 
             @bind
-            willDestroy() {
-              this.chatService.appEvents.off(
+            didInsert() {
+              this.chatService.appEvents.on(
                 "chat:user-tracking-state-changed",
                 this._refreshTrackingState
               );
@@ -60,10 +64,19 @@ export default {
               return dasherize(slugifyChannel(this.channel));
             }
 
+            @computed("chatService.activeChannel")
             get classNames() {
-              return this.channel.current_user_membership.muted
-                ? "sidebar-section-link--muted"
-                : "";
+              const classes = [];
+
+              if (this.channel.current_user_membership.muted) {
+                classes.push("sidebar-section-link--muted");
+              }
+
+              if (this.channel.id === this.chatService.activeChannel?.id) {
+                classes.push("sidebar-section-link--active");
+              }
+
+              return classes.join(" ");
             }
 
             get route() {
@@ -75,7 +88,7 @@ export default {
             }
 
             get text() {
-              return htmlSafe(emojiUnescape(this.title));
+              return htmlSafe(emojiUnescape(this.channel.escapedTitle));
             }
 
             get prefixType() {
@@ -91,7 +104,9 @@ export default {
             }
 
             get title() {
-              return this.channel.escapedTitle;
+              return this.channel.escapedDescription
+                ? htmlSafe(this.channel.escapedDescription)
+                : `${this.channel.escapedTitle} ${I18n.t("chat.title")}`;
             }
 
             get prefixBadge() {
@@ -239,10 +254,19 @@ export default {
               return slugifyChannel(this.channel);
             }
 
+            @computed("chatService.activeChannel")
             get classNames() {
-              return this.channel.current_user_membership.muted
-                ? "sidebar-section-link--muted"
-                : "";
+              const classes = [];
+
+              if (this.channel.current_user_membership.muted) {
+                classes.push("sidebar-section-link--muted");
+              }
+
+              if (this.channel.id === this.chatService.activeChannel?.id) {
+                classes.push("sidebar-section-link--active");
+              }
+
+              return classes.join(" ");
             }
 
             get route() {
@@ -254,7 +278,9 @@ export default {
             }
 
             get title() {
-              return this.channel.escapedTitle;
+              return I18n.t("chat.placeholder_others", {
+                messageRecipient: this.channel.escapedTitle,
+              });
             }
 
             get oneOnOneMessage() {
@@ -262,7 +288,7 @@ export default {
             }
 
             get text() {
-              const username = this.title.replaceAll("@", "");
+              const username = this.channel.escapedTitle.replaceAll("@", "");
               if (this.oneOnOneMessage) {
                 const status = this.channel.chatable.users[0].get("status");
                 const statusHtml = status ? this._userStatusHtml(status) : "";
