@@ -11,26 +11,26 @@ export default Component.extend({
   label: "topic.create",
   btnClass: "btn-default",
 
+  init() {
+    let returnValue = false;
+    Group.findAll().then((groups) => {
+      const _availableGroups = groups.filterBy("automatic", false);
+      _availableGroups.forEach((group) => {
+        if (group.name === "rfp-author" || group.name === "rfp-commenter") {
+          // eslint-disable-next-line no-console
+          console.log("_available groups", _availableGroups);
+          returnValue = true;
+          this._isWalletAuthenticated = true;
+        }
+      });
+    });
+
+  }
+
   @action
   onAuthenticate() {
     loadScript(UNLOCK_URL).then(() => {
       window.unlockProtocol.loadCheckoutModal();
     });
-  },
-
-  @discourseComputed()
-  walletAuthenticated() {
-    let returnValue = false;
-    Group.findAll().then((groups) => {
-      const _availableGroups = groups.filterBy("automatic", false);
-      _availableGroups.map((group) => {
-        // eslint-disable-next-line no-console
-        console.log("_available groups", _availableGroups);
-        if (group.name === "rfp-author" || group.name === "rfp-commenter") {
-          returnValue = true;
-        }
-      });
-    });
-    return returnValue;
   },
 });
