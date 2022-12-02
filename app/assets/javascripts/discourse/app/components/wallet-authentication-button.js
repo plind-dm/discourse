@@ -9,7 +9,7 @@ export default Component.extend({
   tagName: "",
   label: "topic.create",
   btnClass: "btn-default",
-
+  isWalletAuthenticated: false,
   init() {
     Group.findAll().then((groups) => {
       const _availableGroups = groups.filterBy("automatic", false);
@@ -17,7 +17,7 @@ export default Component.extend({
         if (group.name === "rfp-author" || group.name === "rfp-commenter") {
           // eslint-disable-next-line no-console
           console.log("_available groups", _availableGroups);
-          this._isWalletAuthenticated = true;
+          this.set("isWalletAuthenticated", true);
         }
       });
     });
