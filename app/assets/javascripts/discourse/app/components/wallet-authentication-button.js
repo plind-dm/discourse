@@ -22,15 +22,15 @@ export default Component.extend({
   walletAuthenticated() {
     let returnValue = false;
     Group.findAll().then((groups) => {
-        const _availableGroups = groups.filterBy("automatic", false);
-        _availableGroups.map(group => {
-            // eslint-disable-next-line no-console
-            console.log('_available groups', _availableGroups);
-            if (group.name === "rfp-author" || group.name === "rfp-commenter") {
-                returnValue = true;
-            }
-        });
+      const _availableGroups = groups.filterBy("automatic", false);
+      _availableGroups.map((group) => {
+        // eslint-disable-next-line no-console
+        console.log("_available groups", _availableGroups);
+        if (group.name === "rfp-author" || group.name === "rfp-commenter") {
+          returnValue = true;
+        }
+      });
     });
     return returnValue;
-  }
+  },
 });
