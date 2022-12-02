@@ -35,7 +35,7 @@
       tag=this.tag}} />
 
   <CreateTopicButton @canCreateTopic={{this.canCreateTopic}} @action={{action "clickCreateTopicButton"}} @disabled={{this.createTopicButtonDisabled}} @label={{this.createTopicLabel}} @btnClass={{this.createTopicClass}} @canCreateTopicOnTag={{this.canCreateTopicOnTag}} />
-
+  <WalletAuthenticationButton />
   <PluginOutlet @name="after-create-topic-button" @connectorTagName="div" @tagName="" @args={{hash
       canCreateTopic=this.canCreateTopic
       createTopicDisabled=this.createTopicDisabled
