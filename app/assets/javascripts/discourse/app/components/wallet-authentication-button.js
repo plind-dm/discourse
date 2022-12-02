@@ -11,6 +11,8 @@ export default Component.extend({
   btnClass: "btn-default",
   isWalletAuthenticated: false,
   init() {
+    this._super(...arguments);
+
     Group.findAll().then((groups) => {
       const _availableGroups = groups.filterBy("automatic", false);
       _availableGroups.forEach((group) => {
