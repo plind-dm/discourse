@@ -13,15 +13,11 @@ export default Component.extend({
   init() {
     this._super(...arguments);
 
-    Group.findAll().then((groups) => {
-      const _availableGroups = groups.filterBy("automatic", false);
-      _availableGroups.forEach((group) => {
-        if (group.name === "rfp-author" || group.name === "rfp-commenter") {
-          // eslint-disable-next-line no-console
-          console.log("_available groups", _availableGroups);
-          this.set("isWalletAuthenticated", true);
-        }
-      });
+    this.currentUser.groups.forEach((group) => {
+      if (group.name === "rfp-author" || group.name === "rfp-commenter") {
+        // eslint-disable-next-line no-console
+        this.set("isWalletAuthenticated", true);
+      }
     });
   },
 

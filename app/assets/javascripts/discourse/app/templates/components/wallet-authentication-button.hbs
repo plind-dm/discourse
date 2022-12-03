@@ -1,9 +1,16 @@
 <button {{on "click" this.onAuthenticate}} class="btn-default btn btn-icon-text ember-view" type="button" style="float: right;" aria-label="Authenticate Wallet">
   {{#if this.isWalletAuthenticated }}
-    <svg style="width: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enable-background="new 0 0 64 64">
+    <svg style="width: 15px; margin-right: 10px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enable-background="new 0 0 64 64">
       <path d="M32,2C15.431,2,2,15.432,2,32c0,16.568,13.432,30,30,30c16.568,0,30-13.432,30-30C62,15.432,48.568,2,32,2z M25.025,50  l-0.02-0.02L24.988,50L11,35.6l7.029-7.164l6.977,7.184l21-21.619L53,21.199L25.025,50z" fill="#43a047"/>
     </svg>
+  {{else}}
+      <svg class="fa d-icon d-icon-plus svg-icon svg-string" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="0" fill="currentColor" stroke="currentColor"><g><path fill="none" d="M0 0h24v24H0z"></path><path d="M2 9h19a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9zm1-6h15v4H2V4a1 1 0 0 1 1-1zm12 11v2h3v-2h-3z"></path></g></svg>
   {{/if}}
-  <svg class="fa d-icon d-icon-plus svg-icon svg-string" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="0" fill="currentColor" stroke="currentColor"><g><path fill="none" d="M0 0h24v24H0z"></path><path d="M2 9h19a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9zm1-6h15v4H2V4a1 1 0 0 1 1-1zm12 11v2h3v-2h-3z"></path></g></svg>
-  <span class="d-button-label">Authenticate Wallet</span>
+  <span class="d-button-label"> 
+    {{#if this.isWalletAuthenticated}} 
+        Wallet Authenticated
+    {{else}}
+     Authenticate Wallet
+    {{/if}}
+  </span>
 </button>
